@@ -2,7 +2,7 @@
 
 (() => {
   const esc = (str) =>
-    String(str ?? "")
+    String(str === null || str === undefined ? "" : str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -147,7 +147,7 @@
       };
       playTone(659.25, now, 0.18);
       playTone(880, now + 0.16, 0.28);
-    } catch {
+    } catch (e) {
       // Ignore browser autoplay block until user interaction
     }
   }
@@ -172,7 +172,7 @@
   }
 
   function getActiveBranch() {
-    const branches = state.bootstrap?.branches || [];
+    const branches = (state.bootstrap && state.bootstrap.branches) || [];
     return branches.find((b) => b.id === state.branchId) || branches[0] || { id: "school-a", name: "1호점", type: "school_stall", default_mode: "pos" };
   }
 
@@ -273,12 +273,12 @@
     const unlockBtn = document.getElementById("btn-kiosk-unlock");
     const lockBtn = document.getElementById("btn-kiosk-lock");
 
-    document.getElementById("header-shop-name").textContent = state.bootstrap?.shopName || "SEOUL BITES PH";
+    document.getElementById("header-shop-name").textContent = (state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH";
     const activeBranch = getActiveBranch();
-    document.getElementById("header-subline").textContent = `${activeBranch.name} · ${state.bootstrap?.businessDate || ""}`;
+    document.getElementById("header-subline").textContent = `${activeBranch.name} · ${(state.bootstrap && state.bootstrap.businessDate) || ""}`;
 
     const select = document.getElementById("branch-select");
-    select.innerHTML = (state.bootstrap?.branches || [])
+    select.innerHTML = ((state.bootstrap && state.bootstrap.branches) || [])
       .map((b) => `<option value="${esc(b.id)}" ${b.id === state.branchId ? "selected" : ""}>${esc(b.name)}</option>`)
       .join("");
 
@@ -364,7 +364,7 @@
 
   // ---------- 58mm Thermal Order Slip Preview & Print ----------
   function buildSlipHtml(order) {
-    const branch = (state.bootstrap?.branches || []).find((b) => b.id === order.branch_id);
+    const branch = ((state.bootstrap && state.bootstrap.branches) || []).find((b) => b.id === order.branch_id);
     const lines = (order.items || [])
       .map(
         (it) => `
@@ -380,8 +380,8 @@
           <strong style="font-size:13px;">ORDER SLIP ONLY</strong><br>
           <small>NOT AN OFFICIAL BIR INVOICE</small><br>
           <hr style="border:none;border-top:1px dashed #000;margin:4px 0;">
-          <strong>${esc(state.bootstrap?.shopName || "SEOUL BITES PH")}</strong><br>
-          <small>${esc(branch?.name || order.branch_id)}</small><br>
+          <strong>${esc((state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH")}</strong><br>
+          <small>${esc((branch && branch.name) || order.branch_id)}</small><br>
           <div style="font-size:20px;font-weight:900;margin:4px 0;">#${order.order_number}</div>
           <small>${esc(order.table_label)} · ${esc(order.source_mode.toUpperCase())}</small>
         </div>
@@ -434,7 +434,7 @@
   // ---------- MODE 1: School Staff 2-Tap POS ----------
   function renderPosMode(container) {
     const branch = getActiveBranch();
-    const allItems = (state.bootstrap?.menuItems || []).filter((m) => m.is_available);
+    const allItems = ((state.bootstrap && state.bootstrap.menuItems) || []).filter((m) => m.is_available);
     const filtered = allItems.filter((m) => {
       if (state.posFilter === "combo") return m.is_quick_combo;
       if (state.posFilter === "all") return true;
@@ -493,7 +493,7 @@
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;">
                   <span class="pos-tile-price num">${php(item.price)}</span>
-                  ${item.options?.length ? `<span class="pill-tag tag-neutral" data-pos-opt="${esc(item.id)}" title="옵션 선택">+옵션</span>` : ""}
+                  ${(item.options && item.options.length) ? `<span class="pill-tag tag-neutral" data-pos-opt="${esc(item.id)}" title="옵션 선택">+옵션</span>` : ""}
                 </div>
               </button>
             `
@@ -818,7 +818,7 @@
       <h3 style="margin-top:0;">🎫 단골 식권 차감 (${needed}칸 필요)</h3>
       <div class="field" style="margin-bottom:12px;">
         <label>식권 번호 입력 또는 아래에서 선택</label>
-        <input id="pc-redeem-code" class="input" placeholder="예: PC-101" value="${esc(state.punchCards[0]?.code || "")}" />
+        <input id="pc-redeem-code" class="input" placeholder="예: PC-101" value="${esc((state.punchCards[0] && state.punchCards[0].code) || "")}" />
       </div>
       <div style="max-height:180px;overflow-y:auto;margin-bottom:14px;">
         ${state.punchCards
@@ -893,11 +893,11 @@
     const groups = item.options || [];
     const selected = {};
     for (const g of groups) {
-      if (g.choices?.length) selected[g.id] = g.choices[0];
+      if ((g.choices && g.choices.length)) selected[g.id] = g.choices[0];
     }
 
     const renderModalContent = () => {
-      const delta = Object.values(selected).reduce((s, c) => s + Number(c?.priceDelta || 0), 0);
+      const delta = Object.values(selected).reduce((s, c) => s + Number((c && c.priceDelta) || 0), 0);
       openModal(`
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
           <div>
@@ -915,7 +915,7 @@
             <div style="display:flex;flex-wrap:wrap;gap:6px;">
               ${g.choices
                 .map((ch) => {
-                  const isSel = selected[g.id]?.id === ch.id;
+                  const isSel = (selected[g.id] && selected[g.id].id) === ch.id;
                   return `<button type="button" class="filter-chip ${isSel ? "active" : ""}" data-opt-g="${esc(g.id)}" data-opt-c="${esc(ch.id)}">${esc(ch.label_en)} ${ch.priceDelta ? `(+${php(ch.priceDelta)})` : ""}</button>`;
                 })
                 .join("")}
@@ -930,7 +930,7 @@
       document.querySelectorAll("[data-opt-g]").forEach((btn) => {
         btn.onclick = () => {
           const grp = groups.find((g) => g.id === btn.dataset.optG);
-          const ch = grp?.choices.find((c) => c.id === btn.dataset.optC);
+          const ch = grp && grp.choices.find((c) => c.id === btn.dataset.optC);
           if (ch) selected[grp.id] = ch;
           renderModalContent();
         };
@@ -953,7 +953,7 @@
   function renderKioskMode(container) {
     const t = I18N[state.lang] || I18N.ko_en;
     const branch = getActiveBranch();
-    const allItems = (state.bootstrap?.menuItems || []).filter((m) => m.is_available);
+    const allItems = ((state.bootstrap && state.bootstrap.menuItems) || []).filter((m) => m.is_available);
     const quickCombos = allItems.filter((m) => m.is_quick_combo);
     const filtered = allItems.filter((m) => state.kioskFilter === "all" || m.category === state.kioskFilter);
     const total = getCartTotal();
@@ -961,7 +961,7 @@
     container.innerHTML = `
       <div class="pos-banner">
         <div>
-          <h2>${esc(state.bootstrap?.shopName || "SEOUL BITES PH")} ${state.tableLabel ? `<span class="pill-tag tag-gold">📍 ${esc(state.tableLabel)}</span>` : ""}</h2>
+          <h2>${esc((state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH")} ${state.tableLabel ? `<span class="pill-tag tag-gold">📍 ${esc(state.tableLabel)}</span>` : ""}</h2>
           <p>${esc(branch.name)} · Self-Order Kiosk & Mobile QR</p>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -1135,7 +1135,7 @@
       card.onclick = () => {
         const item = allItems.find((m) => m.id === card.dataset.kioskItem);
         if (!item) return;
-        if (item.options?.length && !item.is_quick_combo) openItemOptionsModal(item);
+        if ((item.options && item.options.length) && !item.is_quick_combo) openItemOptionsModal(item);
         else addToCart(item, []);
       };
     });
@@ -1410,7 +1410,7 @@
   // ---------- MODE 4: True Blind Closeout ----------
   function renderCloseoutMode(container) {
     const branch = getActiveBranch();
-    const invItems = state.bootstrap?.inventoryItems || [];
+    const invItems = (state.bootstrap && state.bootstrap.inventoryItems) || [];
     const denoms = [
       { key: "1000", label: "₱1,000 지폐" },
       { key: "500", label: "₱500 지폐" },
@@ -1598,7 +1598,7 @@
           <input type="date" id="adm-date" class="input" style="width:auto;padding:6px 10px;" value="${esc(state.adminDate)}" />
           <select id="adm-branch-filter" class="input" style="width:auto;padding:6px 10px;">
             <option value="all" ${state.adminFilterBranch === "all" ? "selected" : ""}>전체 분점 통합</option>
-            ${(state.bootstrap?.branches || []).map((b) => `<option value="${esc(b.id)}" ${state.adminFilterBranch === b.id ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+            ${((state.bootstrap && state.bootstrap.branches) || []).map((b) => `<option value="${esc(b.id)}" ${state.adminFilterBranch === b.id ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
           </select>
           <a class="btn btn-ghost btn-sm" href="/api/admin/export-csv?date=${encodeURIComponent(state.adminDate)}&branchId=${encodeURIComponent(state.adminFilterBranch)}&pin=${encodeURIComponent(state.adminPin)}">📥 CSV</a>
           <button type="button" class="btn btn-ghost btn-sm" id="btn-adm-lock">🔒 로그아웃</button>
@@ -1823,7 +1823,7 @@
             <div class="field">
               <label>출고 대상 지점</label>
               <select id="disp-branch" class="input">
-                ${(state.bootstrap?.branches || []).map((b) => `<option value="${esc(b.id)}" ${b.id === summary.branch.id ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+                ${((state.bootstrap && state.bootstrap.branches) || []).map((b) => `<option value="${esc(b.id)}" ${b.id === summary.branch.id ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
               </select>
             </div>
             <div class="field">
@@ -1866,7 +1866,7 @@
           allocations.push({
             inventoryItemId: id,
             openingQty: Number(inp.value || 0),
-            approvedWasteQty: Number(wasteInp?.value || 0),
+            approvedWasteQty: Number((wasteInp && wasteInp.value) || 0),
           });
         });
         try {
@@ -1882,7 +1882,7 @@
         }
       };
     } else if (state.adminTab === "menu") {
-      const items = state.bootstrap?.menuItems || [];
+      const items = (state.bootstrap && state.bootstrap.menuItems) || [];
       el.innerHTML = `
         <div class="card" style="padding:16px;margin-bottom:14px;">
           <h3 style="margin-top:0;">➕ 새 메뉴 추가 (₱50 단위 가격 권장)</h3>
@@ -1891,7 +1891,7 @@
             <div class="field"><label>한국어 이름</label><input id="new-ko" class="input" placeholder="예: 치즈 컵밥 + 음료" /></div>
             <div class="field"><label>영어 이름</label><input id="new-en" class="input" placeholder="Cheese Cupbap + Drink" /></div>
             <div class="field"><label>가격 (₱)</label><input type="number" id="new-price" class="input num" value="150" step="10" /></div>
-            <div class="field"><label>1:1 차감 용기</label><select id="new-inv" class="input">${(state.bootstrap?.inventoryItems || []).map((i) => `<option value="${esc(i.id)}">${esc(i.name_ko)}</option>`).join("")}</select></div>
+            <div class="field"><label>1:1 차감 용기</label><select id="new-inv" class="input">${((state.bootstrap && state.bootstrap.inventoryItems) || []).map((i) => `<option value="${esc(i.id)}">${esc(i.name_ko)}</option>`).join("")}</select></div>
             <div class="field"><label>원터치 세트 여부</label><select id="new-quick" class="input"><option value="1">⚡ 1-Tap 원터치 세트</option><option value="0">일반 메뉴</option></select></div>
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="btn-add-menu">➕ 메뉴 추가하기</button>
@@ -1950,7 +1950,7 @@
       const uploadedImages = {};
       el.querySelectorAll("[data-menu-file]").forEach((inp) => {
         inp.onchange = async () => {
-          const file = inp.files?.[0];
+          const file = (inp.files && inp.files[0]);
           if (!file) return;
           uploadedImages[inp.dataset.menuFile] = await compressImageToDataUrl(file, 480);
           toast("사진 준비 완료! [저장]을 눌러 반영하세요.", "info");
@@ -2001,7 +2001,7 @@
             <table class="data-table">
               <thead><tr><th>지점 ID</th><th>지점명</th><th>기본 모드</th><th>오픈 시재</th><th>바로 이동</th></tr></thead>
               <tbody>
-                ${(state.bootstrap?.branches || [])
+                ${((state.bootstrap && state.bootstrap.branches) || [])
                   .map(
                     (b) => `
                   <tr>
@@ -2143,7 +2143,7 @@
   // ---------- MODE 6: Printable BSP-Compliant Cash Drop-Box & QR Signage Studio ----------
   function renderSignageMode(container) {
     const branch = getActiveBranch();
-    const shopName = state.bootstrap?.shopName || "SEOUL BITES PH";
+    const shopName = (state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH";
     const baseOrigin = window.location.origin;
     const lineQrUrl = `${baseOrigin}/?mode=kiosk&branchId=${encodeURIComponent(branch.id)}&table=LINE-QR&lock=1`;
     const table1QrUrl = `${baseOrigin}/?mode=kiosk&branchId=${encodeURIComponent(branch.id)}&table=Table-1&lock=1`;
@@ -2182,7 +2182,7 @@
             </ol>
           </div>
           <div style="background:var(--blue-soft);color:var(--blue);padding:10px;border-radius:10px;text-align:center;font-weight:800;font-size:14px;">
-            📱 GCash: ${esc(branch.gcash_number || state.bootstrap?.signageGcashNumber || "")} (${esc(state.bootstrap?.signageGcashName || "")})
+            📱 GCash: ${esc(branch.gcash_number || (state.bootstrap && state.bootstrap.signageGcashNumber) || "")} (${esc((state.bootstrap && state.bootstrap.signageGcashName) || "")})
           </div>
         </article>
 
@@ -2286,7 +2286,7 @@
     state.branchId = e.target.value;
     localStorage.setItem("ksnack_branch", state.branchId);
     const branch = getActiveBranch();
-    if (!urlParams.get("mode") && branch?.default_mode && ["pos", "kiosk"].includes(state.mode)) {
+    if (!urlParams.get("mode") && (branch && branch.default_mode) && ["pos", "kiosk"].includes(state.mode)) {
       state.mode = branch.default_mode;
     }
     updateUrlParams();

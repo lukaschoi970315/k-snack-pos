@@ -809,13 +809,17 @@ table.data-table th {
 /* ---------- Modals & Toasts ---------- */
 .modal-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 80;
   background: rgba(20, 17, 15, 0.62);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
 }
 

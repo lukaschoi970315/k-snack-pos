@@ -2,15 +2,37 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SEOUL BITES PH · 다지점 무포스 POS · 키오스크 · 횡령방지 · 돈통안내문 체험판</title>
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>SEOUL BITES PH · 다지점 무포스 POS · 키오스크 · 횡령방지 · 돈통안내문</title>
   <style>
-    body {
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
       background: #FAF6F0;
       color: #1F1B18;
       font-family: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
     }
+    button, input, select {
+      font-family: inherit;
+      font-size: inherit;
+      margin: 0;
+    }
+    button {
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+      color: inherit;
+      -webkit-appearance: none;
+    }
+    input, select { -webkit-appearance: none; }
+    h1, h2, h3, h4, p { margin: 0; }
     .num { font-variant-numeric: tabular-nums; }
     .food-svg { width: 100%; height: 100%; display: block; object-fit: cover; }
     .receipt-58 {
@@ -23,6 +45,238 @@
       font-family: "Courier New", monospace;
       font-size: 11px;
     }
+
+    /* Layout & Display */
+    .min-h-screen { min-height: 100vh; }
+    .min-h-\[112px\] { min-height: 112px; }
+    .min-h-\[420px\] { min-height: 420px; }
+    .h-2\.5 { height: 0.625rem; }
+    .h-7 { height: 1.75rem; }
+    .h-32 { height: 8rem; }
+    .h-36 { height: 9rem; }
+    .h-full { height: 100%; }
+    .max-h-56 { max-height: 14rem; }
+    .max-h-60 { max-height: 15rem; }
+    .max-h-\[90vh\] { max-height: 90vh; }
+    .w-7 { width: 1.75rem; }
+    .w-20 { width: 5rem; }
+    .w-full { width: 100%; }
+    .max-w-sm { max-width: 24rem; }
+    .max-w-md { max-width: 28rem; }
+    .max-w-3xl { max-width: 48rem; }
+    .max-w-7xl { max-width: 80rem; }
+
+    .block { display: block; }
+    .inline-block { display: inline-block; }
+    .flex { display: -webkit-flex; display: flex; }
+    .flex-1 { -webkit-flex: 1 1 0%; flex: 1 1 0%; }
+    .flex-col { -webkit-flex-direction: column; flex-direction: column; }
+    .flex-wrap { -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+    .items-center { -webkit-align-items: center; align-items: center; }
+    .items-end { -webkit-align-items: flex-end; align-items: flex-end; }
+    .items-start { -webkit-align-items: flex-start; align-items: flex-start; }
+    .justify-around { -webkit-justify-content: space-around; justify-content: space-around; }
+    .justify-between { -webkit-justify-content: space-between; justify-content: space-between; }
+    .justify-center { -webkit-justify-content: center; justify-content: center; }
+
+    .grid { display: grid; }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .col-span-2 { grid-column: span 2 / span 2; }
+    @media (min-width: 640px) {
+      .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .sm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (min-width: 768px) {
+      .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1024px) {
+      .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .lg\:col-span-2 { grid-column: span 2 / span 2; }
+    }
+
+    /* Grid gap (Safari 10.1+) + safe flex spacing (Safari 12+ compatible!) */
+    .gap-1 { grid-gap: 0.25rem; gap: 0.25rem; }
+    .gap-1\.5 { grid-gap: 0.375rem; gap: 0.375rem; }
+    .gap-2 { grid-gap: 0.5rem; gap: 0.5rem; }
+    .gap-2\.5 { grid-gap: 0.625rem; gap: 0.625rem; }
+    .gap-3 { grid-gap: 0.75rem; gap: 0.75rem; }
+    .gap-4 { grid-gap: 1rem; gap: 1rem; }
+
+    /* Universal fallback margins for flex containers on iOS 12/13 (where flex gap was ignored) */
+    @supports not (row-gap: 1px) {
+      .flex.gap-1 > * { margin: 2px; }
+      .flex.gap-1\.5 > * { margin: 3px; }
+      .flex.gap-2 > * { margin: 4px; }
+      .flex.gap-2\.5 > * { margin: 5px; }
+      .flex.gap-3 > * { margin: 6px; }
+      .flex.gap-4 > * { margin: 8px; }
+    }
+
+    .space-y-0\.5 > * + * { margin-top: 0.125rem; }
+    .space-y-1\.5 > * + * { margin-top: 0.375rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+
+    .hidden { display: none !important; }
+    .relative { position: relative; }
+    .sticky { position: -webkit-sticky; position: sticky; }
+    .fixed { position: fixed; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .top-0 { top: 0; }
+    .top-2 { top: 0.5rem; }
+    .top-3 { top: 0.75rem; }
+    .top-16 { top: 4rem; }
+    .right-3 { right: 0.75rem; }
+    .right-4 { right: 1rem; }
+    .bottom-4 { bottom: 1rem; }
+    .left-2 { left: 0.5rem; }
+    .z-40 { z-index: 40; }
+    .z-50 { z-index: 50; }
+    .overflow-hidden { overflow: hidden; }
+    .overflow-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .overflow-y-auto { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Margin & Padding */
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .my-1\.5 { margin-top: 0.375rem; margin-bottom: 0.375rem; }
+    .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+    .my-10 { margin-top: 2.5rem; margin-bottom: 2.5rem; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-1\.5 { margin-bottom: 0.375rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-2\.5 { margin-bottom: 0.625rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+
+    .p-2 { padding: 0.5rem; }
+    .p-2\.5 { padding: 0.625rem; }
+    .p-3 { padding: 0.75rem; }
+    .p-3\.5 { padding: 0.875rem; }
+    .p-4 { padding: 1rem; }
+    .p-5 { padding: 1.25rem; }
+    .p-6 { padding: 1.5rem; }
+    .px-1\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    .py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+    .pb-2 { padding-bottom: 0.5rem; }
+    .pl-5 { padding-left: 1.25rem; }
+
+    /* Typography */
+    .text-\[10px\] { font-size: 10px; }
+    .text-\[11px\] { font-size: 11px; }
+    .text-xs { font-size: 12px; }
+    .text-sm { font-size: 14px; }
+    .text-base { font-size: 16px; }
+    .text-lg { font-size: 18px; }
+    .text-xl { font-size: 20px; }
+    .text-2xl { font-size: 24px; }
+    .font-normal { font-weight: 400; }
+    .font-bold { font-weight: 700; }
+    .font-extrabold { font-weight: 800; }
+    .font-black { font-weight: 900; }
+    .leading-tight { line-height: 1.25; }
+    .leading-snug { line-height: 1.375; }
+    .tracking-widest { letter-spacing: 0.1em; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .text-right { text-align: right; }
+    .uppercase { text-transform: uppercase; }
+    .list-decimal { list-style-type: decimal; }
+
+    /* Colors */
+    .bg-white { background-color: #FFFFFF; }
+    .bg-amber-50 { background-color: #FFFBEB; }
+    .bg-black\/60 { background-color: rgba(0, 0, 0, 0.6); }
+    .bg-\[\#177A52\] { background-color: #177A52; }
+    .bg-\[\#1E5EA8\] { background-color: #1E5EA8; }
+    .bg-\[\#1F1B18\] { background-color: #1F1B18; }
+    .bg-\[\#1F1B18\]\/80 { background-color: rgba(31, 27, 24, 0.85); }
+    .bg-\[\#27221E\] { background-color: #27221E; }
+    .bg-\[\#2B2621\] { background-color: #2B2621; }
+    .bg-\[\#312B26\] { background-color: #312B26; }
+    .bg-\[\#B91C1C\] { background-color: #B91C1C; }
+    .bg-\[\#C93B2B\] { background-color: #C93B2B; }
+    .bg-\[\#D9822B\] { background-color: #D9822B; }
+    .bg-\[\#E6F5EE\] { background-color: #E6F5EE; }
+    .bg-\[\#EAF2FC\] { background-color: #EAF2FC; }
+    .bg-\[\#F4EDE2\] { background-color: #F4EDE2; }
+    .bg-\[\#FDECE9\] { background-color: #FDECE9; }
+    .bg-\[\#FEF2F2\] { background-color: #FEF2F2; }
+    .bg-\[\#FEF4E4\] { background-color: #FEF4E4; }
+    .bg-\[\#FFF8ED\] { background-color: #FFF8ED; }
+    .bg-gradient-to-r { background-image: linear-gradient(to right, #177A52, #D9822B, #C93B2B); }
+
+    .text-white { color: #FFFFFF; }
+    .text-\[\#177A52\] { color: #177A52; }
+    .text-\[\#1E5EA8\] { color: #1E5EA8; }
+    .text-\[\#655B52\] { color: #655B52; }
+    .text-\[\#9A530F\] { color: #9A530F; }
+    .text-\[\#B91C1C\] { color: #B91C1C; }
+    .text-\[\#C93B2B\] { color: #C93B2B; }
+    .text-\[\#C9BFB3\] { color: #C9BFB3; }
+    .text-\[\#D9822B\] { color: #D9822B; }
+    .text-\[\#DFD3C5\] { color: #DFD3C5; }
+    .text-\[\#E6DDD2\] { color: #E6DDD2; }
+    .text-\[\#FAF6F0\] { color: #FAF6F0; }
+
+    /* Borders & Radii */
+    .border { border: 1px solid #E5DCCF; }
+    .border-2 { border-width: 2px; border-style: solid; }
+    .border-4 { border-width: 4px; border-style: solid; }
+    .border-t { border-top: 1px solid #E5DCCF; }
+    .border-y { border-top: 1px solid #E5DCCF; border-bottom: 1px solid #E5DCCF; }
+    .border-b-2 { border-bottom-width: 2px; border-bottom-style: solid; }
+    .border-b-4 { border-bottom-width: 4px; border-bottom-style: solid; }
+    .border-dashed { border-style: dashed; }
+    .border-amber-400 { border-color: #FBBF24; }
+    .border-\[\#177A52\] { border-color: #177A52; }
+    .border-\[\#1F1B18\] { border-color: #1F1B18; }
+    .border-\[\#3F3831\] { border-color: #3F3831; }
+    .border-\[\#4D443C\] { border-color: #4D443C; }
+    .border-\[\#594F47\] { border-color: #594F47; }
+    .border-\[\#B91C1C\] { border-color: #B91C1C; }
+    .border-\[\#C93B2B\] { border-color: #C93B2B; }
+    .border-\[\#D0C3B2\] { border-color: #D0C3B2; }
+    .border-\[\#D9822B\] { border-color: #D9822B; }
+    .border-\[\#E5DCCF\] { border-color: #E5DCCF; }
+    .border-\[\#EBC28B\] { border-color: #EBC28B; }
+    .border-\[\#EBD2AD\] { border-color: #EBD2AD; }
+
+    .rounded { border-radius: 0.25rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-2xl { border-radius: 1rem; }
+    .rounded-full { border-radius: 9999px; }
+
+    .shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+    .shadow-lg { box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14); }
+    .shadow-2xl { box-shadow: 0 24px 48px rgba(0, 0, 0, 0.26); }
+    .backdrop-blur { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .cursor-pointer { cursor: pointer; }
+    .transition { transition: all 0.14s ease; }
+    .active\:scale-95:active { transform: scale(0.96); }
+    .disabled\:opacity-40:disabled { opacity: 0.4; cursor: not-allowed; }
+    .hover\:bg-\[\#312B26\]:hover { background-color: #312B26; }
+    .hover\:bg-\[\#423A33\]:hover { background-color: #423A33; }
+    .hover\:border-\[\#C93B2B\]:hover { border-color: #C93B2B; }
+    .hover\:shadow-md:hover { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); }
+    table { border-collapse: collapse; }
     @media print {
       .no-print { display: none !important; }
       body { background: #fff !important; }
@@ -210,11 +464,15 @@
       try {
         const raw = localStorage.getItem(STORE_KEY);
         return raw ? JSON.parse(raw) : defaultStore();
-      } catch {
+      } catch (e) {
         return defaultStore();
       }
     })();
-    const saveStore = () => localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    const saveStore = () => {
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify(store));
+      } catch (e) {}
+    };
 
     const _qp = new URLSearchParams(window.location.search);
     const ui = {
@@ -231,7 +489,7 @@
       lastOrder: null,
     };
 
-    const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const esc = (s) => String(s === null || s === undefined ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     const php = (n) => `₱${Number(n || 0).toLocaleString("en-PH")}`;
     const activeBranch = () => store.branches.find((b) => b.id === ui.branchId) || store.branches[0];
 
@@ -631,10 +889,11 @@
                         <thead><tr class="bg-[#F4EDE2] text-[#655B52]"><th class="p-2 text-left">1:1 품목</th><th class="p-2 text-left">출고</th><th class="p-2 text-left">판매</th><th class="p-2 text-left">예상잔여</th><th class="p-2 text-left">마감실물</th><th class="p-2 text-left">오차</th></tr></thead>
                         <tbody>
                           ${INV_ITEMS.map((inv) => {
-                            const open = b.alloc[inv.id] ?? inv.defaultQty;
+                            const open = b.alloc[inv.id] !== undefined ? b.alloc[inv.id] : inv.defaultQty;
                             const sold = soldInv[inv.id] || 0;
                             const exp = open - sold;
-                            const rep = lastCls ? Number(lastCls.rem[inv.id] ?? 0) : null;
+                            const repVal = lastCls && lastCls.rem[inv.id] !== undefined ? lastCls.rem[inv.id] : 0;
+                            const rep = lastCls ? Number(repVal) : null;
                             const diff = rep !== null ? rep - exp : null;
                             return `<tr class="border-t"><td class="p-2 font-bold">${esc(inv.name_ko)}</td><td class="p-2 num">${open}</td><td class="p-2 num">${sold}</td><td class="p-2 num font-bold">${exp}</td><td class="p-2 num">${rep!==null?rep:"-"}</td><td class="p-2 num font-bold">${diff===null?"-":diff===0?`<span class="text-[#177A52]">0</span>`:`<span class="text-[#B91C1C]">🚨 ${diff}</span>`}</td></tr>`;
                           }).join("")}
