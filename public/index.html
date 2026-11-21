@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SEOUL BITES PH · 다지점 초고속 POS · 키오스크 · 횡령방지 정산</title>
+  <meta name="description" content="필리핀 분식 다지점(학교 칸틴 초고속 POS + 로드샵 손님 키오스크/테이블 QR + 주방 KDS + 블라인드 마감 1:1 용기 역산 + BSP 합법 돈통 안내문) 통합 시스템" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- Top Operational Header (Hidden automatically when Kiosk PIN Lock is enabled) -->
+  <header id="app-header" class="top-header">
+    <div class="header-left">
+      <div class="brand-mark">
+        <span class="brand-badge">K-SNACK</span>
+        <div>
+          <strong id="header-shop-name">SEOUL BITES PH</strong>
+          <small id="header-subline" class="header-sub">다지점 무포스 운영 시스템</small>
+        </div>
+      </div>
+
+      <div class="branch-picker-wrap" id="branch-picker-wrap">
+        <label for="branch-select" class="sr-only">지점 선택</label>
+        <select id="branch-select" class="branch-select"></select>
+      </div>
+    </div>
+
+    <nav class="mode-tabs" id="mode-tabs" aria-label="운영 모드 선택">
+      <button type="button" class="mode-tab" data-mode="pos">⚡ 직원 초고속 POS</button>
+      <button type="button" class="mode-tab" data-mode="kiosk">📱 손님 키오스크</button>
+      <button type="button" class="mode-tab" data-mode="kitchen">🍳 주방 KDS <span id="kds-badge" class="tab-badge hidden">0</span></button>
+      <button type="button" class="mode-tab" data-mode="closeout">🔒 블라인드 마감</button>
+      <button type="button" class="mode-tab" data-mode="admin">📊 사장님 감시</button>
+      <button type="button" class="mode-tab" data-mode="signage">🖨️ 돈통·QR 안내문</button>
+    </nav>
+
+    <div class="header-right">
+      <span id="sse-pill" class="sse-pill" title="실시간 동기화 상태">● 실시간 연결</span>
+      <button type="button" id="btn-kiosk-lock" class="btn-outline-sm hidden">🔒 화면 잠금</button>
+    </div>
+  </header>
+
+  <!-- Floating Kiosk Unlock Button when Locked -->
+  <button type="button" id="btn-kiosk-unlock" class="floating-unlock hidden">🔓 직원/사장님 잠금해제</button>
+
+  <!-- Main Workspace -->
+  <main id="app-main" class="app-main"></main>
+
+  <!-- Modal Layer -->
+  <div id="modal-backdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div id="modal-card" class="modal-card"></div>
+  </div>
+
+  <!-- Toast Stack -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Dedicated Print Target (58mm Order Slip or A4 Signage) -->
+  <section id="print-area" class="print-only"></section>
+
+  <script src="/qr.js"></script>
+  <script src="/food-art.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

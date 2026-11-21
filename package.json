@@ -1,0 +1,14 @@
+{
+  "name": "k-snack-pos",
+  "version": "2.0.0",
+  "description": "Multi-branch Philippine K-Snack POS, Self-Kiosk, Table QR, Kitchen KDS, True Blind Closeout, 1:1 Inventory Audit, and Printable Drop-Box Signage System",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_e2e.mjs"
+  }
+}

@@ -1,0 +1,897 @@
+/* SEOUL BITES PH — Multi-Branch POS, Kiosk, KDS & Anti-Embezzlement Stylesheet */
+
+:root {
+  --bg: #faf6f0;
+  --surface: #ffffff;
+  --surface-alt: #f4ede2;
+  --surface-warm: #fff8ed;
+  --border: #e5dccf;
+  --border-strong: #d0c3b2;
+  --ink: #1f1b18;
+  --ink-muted: #655b52;
+  --primary: #c93b2b;
+  --primary-hover: #ad2f21;
+  --primary-soft: #fdece9;
+  --gold: #d9822b;
+  --gold-soft: #fef4e4;
+  --green: #177a52;
+  --green-soft: #e6f5ee;
+  --blue: #1e5ea8;
+  --blue-soft: #eaf2fc;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --shadow-sm: 0 2px 6px rgba(31, 27, 24, 0.06);
+  --shadow-md: 0 8px 24px rgba(31, 27, 24, 0.09);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Top Header ---------- */
+.top-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 10px 18px;
+  background: #1f1b18;
+  color: #faf6f0;
+  border-bottom: 3px solid var(--primary);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-badge {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.brand-mark strong {
+  display: block;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.header-sub {
+  display: block;
+  font-size: 11px;
+  color: #c9bfb3;
+}
+
+.branch-select {
+  appearance: none;
+  background: #312b26;
+  color: #fff;
+  border: 1px solid #4d443c;
+  border-radius: 9px;
+  padding: 8px 30px 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, #e5dccf 50%), linear-gradient(135deg, #e5dccf 50%, transparent 50%);
+  background-position: calc(100% - 16px) 52%, calc(100% - 11px) 52%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mode-tab {
+  border: 1px solid #3f3831;
+  background: #2b2621;
+  color: #e6ddd2;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.14s ease;
+}
+
+.mode-tab:hover {
+  background: #3a332d;
+}
+
+.mode-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(201, 59, 43, 0.35);
+}
+
+.tab-badge {
+  background: #fff;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sse-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7ee2b8;
+  background: rgba(23, 122, 82, 0.22);
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+.sse-pill.offline {
+  color: #fca5a5;
+  background: rgba(185, 28, 28, 0.25);
+}
+
+.btn-outline-sm {
+  background: transparent;
+  color: #faf6f0;
+  border: 1px solid #594f47;
+  padding: 6px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.floating-unlock {
+  position: fixed;
+  top: 10px;
+  right: 12px;
+  z-index: 60;
+  background: rgba(31, 27, 24, 0.78);
+  color: #faf6f0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- Main Workspace ---------- */
+.app-main {
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ---------- Reusable Buttons & Cards ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.14s ease, box-shadow 0.14s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-green {
+  background: var(--green);
+  color: #fff;
+}
+.btn-green:hover {
+  background: #126241;
+}
+
+.btn-blue {
+  background: var(--blue);
+  color: #fff;
+}
+.btn-blue:hover {
+  background: #174c8a;
+}
+
+.btn-gold {
+  background: var(--gold);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-color: var(--border);
+}
+.btn-ghost:hover {
+  background: #ebe2d4;
+}
+
+.btn-danger-outline {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: #fecaca;
+}
+
+.btn-sm {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.btn-lg {
+  min-height: 54px;
+  font-size: 16px;
+}
+
+.pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tag-green { background: var(--green-soft); color: var(--green); }
+.tag-red { background: var(--danger-soft); color: var(--danger); }
+.tag-gold { background: var(--gold-soft); color: #9a530f; }
+.tag-blue { background: var(--blue-soft); color: var(--blue); }
+.tag-neutral { background: var(--surface-alt); color: var(--ink-muted); }
+
+/* ---------- Split Layout (POS & Kiosk) ---------- */
+.split-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .split-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pos-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #27221e, #3b2d24);
+  color: #faf6f0;
+  border-radius: var(--radius-md);
+}
+
+.pos-banner h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.pos-banner p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #dfd3c5;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filter-chip {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filter-chip.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+/* ---------- POS 2-Tap Fast Grid ---------- */
+.pos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 10px;
+}
+
+.pos-tile {
+  text-align: left;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 122px;
+  transition: border-color 0.12s ease, transform 0.08s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.pos-tile:hover {
+  border-color: var(--primary);
+}
+.pos-tile:active {
+  transform: scale(0.97);
+}
+.pos-tile.combo {
+  background: var(--surface-warm);
+  border-color: #ebc28b;
+}
+
+.pos-tile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.pos-tile-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.pos-tile-sub {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 3px;
+}
+
+.pos-tile-price {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--primary);
+  margin-top: 10px;
+}
+
+/* ---------- Kiosk Photo Menu Cards ---------- */
+.kiosk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.menu-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.menu-visual {
+  position: relative;
+  height: 150px;
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.menu-photo,
+.food-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.quick-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.menu-card-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.menu-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.menu-card-sub {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 3px;
+}
+
+.menu-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.menu-price {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+/* ---------- Cart & Checkout Rail ---------- */
+.checkout-rail {
+  position: sticky;
+  top: 74px;
+  padding: 16px;
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 12px 0;
+}
+
+.cart-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface-alt);
+  border-radius: 10px;
+}
+
+.qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qty-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tender-box {
+  background: var(--surface-warm);
+  border: 1px solid #ebd2ad;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.tender-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.tender-btn {
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tender-btn.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.change-callout {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--green-soft);
+  color: var(--green);
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.checkout-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.checkout-actions .full-span {
+  grid-column: 1 / -1;
+}
+
+/* ---------- KDS Columns ---------- */
+.kds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 980px) {
+  .kds-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kds-col {
+  padding: 12px;
+  min-height: 460px;
+}
+
+.kds-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+
+.kds-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.kds-card.unpaid {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.kds-card.ready {
+  border-color: var(--green);
+  background: #f2fbf7;
+}
+
+/* ---------- Forms & Tables ---------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+
+.input,
+select.input,
+textarea.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+table.data-table th,
+table.data-table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+table.data-table th {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-muted);
+  background: var(--surface-alt);
+}
+
+/* ---------- KPI & Admin Grid ---------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.kpi-card {
+  padding: 14px;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: 900;
+  margin-top: 4px;
+}
+
+.progress-track {
+  width: 100%;
+  height: 12px;
+  background: var(--surface-alt);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--gold), var(--primary));
+  border-radius: 999px;
+}
+
+/* ---------- Signage Print Cards ---------- */
+.signage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.sign-poster {
+  background: #fff;
+  border: 3px solid #1f1b18;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  page-break-inside: avoid;
+}
+
+.sign-poster.accent-red {
+  border-color: var(--primary);
+}
+
+.sign-poster.accent-green {
+  border-color: var(--green);
+}
+
+.sign-header-band {
+  background: #1f1b18;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 900;
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.sign-poster.accent-red .sign-header-band {
+  background: var(--primary);
+}
+.sign-poster.accent-green .sign-header-band {
+  background: var(--green);
+}
+
+/* ---------- Modals & Toasts ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(20, 17, 15, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.toast-container {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: #1f1b18;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.toast.success { background: var(--green); }
+.toast.error { background: var(--danger); }
+
+/* ---------- 58mm Thermal Order Slip & Print Rules ---------- */
+.receipt-58mm {
+  width: 58mm;
+  margin: 0 auto;
+  padding: 8px;
+  background: #fff;
+  color: #000;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+  border: 1px dashed #999;
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+  #app-header,
+  #app-main,
+  #modal-backdrop,
+  #toast-container,
+  #btn-kiosk-unlock {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .receipt-58mm {
+    border: none;
+    width: 54mm;
+    margin: 0;
+    padding: 0;
+  }
+  .signage-print-sheet {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}

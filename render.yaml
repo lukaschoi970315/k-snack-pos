@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: k-snack-pos
+    runtime: node
+    plan: starter
+    buildCommand: "node --check server.js"
+    startCommand: "node server.js"
+    envVars:
+      - key: DB_PATH
+        value: /var/data/k_snack_pos.db
+    disk:
+      name: k-snack-data
+      mountPath: /var/data
+      sizeGB: 1

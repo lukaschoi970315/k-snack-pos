@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEOUL BITES PH · 다지점 무포스 POS · 키오스크 · 횡령방지 · 돈통안내문 체험판</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body {
+      background: #FAF6F0;
+      color: #1F1B18;
+      font-family: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .num { font-variant-numeric: tabular-nums; }
+    .food-svg { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .receipt-58 {
+      width: 240px;
+      margin: 0 auto;
+      padding: 10px;
+      background: #fff;
+      color: #000;
+      border: 1px dashed #999;
+      font-family: "Courier New", monospace;
+      font-size: 11px;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+  <!-- Top Bar -->
+  <header id="top-bar" class="no-print sticky top-0 z-40 bg-[#1F1B18] text-[#FAF6F0] border-b-4 border-[#C93B2B] px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <span class="bg-[#C93B2B] text-white text-xs font-extrabold px-2 py-1 rounded">태블릿 웹앱</span>
+        <div>
+          <div class="font-extrabold text-sm leading-tight">SEOUL BITES PH · 다지점 무포스 시스템</div>
+          <div class="text-[11px] text-[#C9BFB3]">학교 초고속 POS + 로드샵 키오스크/QR + 1:1 횡령적발 + BSP 돈통안내문</div>
+        </div>
+        <select id="branch-select" class="bg-[#312B26] text-white text-xs font-bold border border-[#4D443C] rounded-lg px-2.5 py-1.5"></select>
+      </div>
+      <nav id="nav-tabs" class="flex flex-wrap gap-1.5"></nav>
+      <div class="flex items-center gap-2">
+        <button id="btn-lock-kiosk" class="hidden text-xs border border-[#594F47] px-2.5 py-1 rounded-lg hover:bg-[#312B26]">🔒 화면잠금</button>
+        <button id="btn-reset-demo" class="text-xs bg-[#312B26] border border-[#4D443C] px-2.5 py-1 rounded-lg hover:bg-[#423A33]">🔄 데모 초기화</button>
+      </div>
+    </div>
+  </header>
+
+  <button id="btn-unlock-kiosk" class="no-print hidden fixed top-3 right-3 z-50 bg-[#1F1B18]/80 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur">🔓 잠금해제 (PIN 7777)</button>
+
+  <main id="app" class="max-w-7xl mx-auto p-4"></main>
+
+  <div id="modal-root" class="no-print hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div id="modal-box" class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 shadow-2xl"></div>
+  </div>
+
+  <div id="toast-box" class="no-print fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+  <script>
+  (() => {
+    const EOMUK_PHOTO = "data:image/jpeg;base64,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";
+
+    const ART = {
+      cupbap_chicken: `<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" class="food-svg"><rect width="320" height="220" fill="#F4E6D3"/><ellipse cx="160" cy="186" rx="92" ry="18" fill="rgba(45,30,15,0.14)"/><path d="M84 96 L236 96 L216 178 C214 185 190 190 160 190 C130 190 106 185 104 178 Z" fill="#231F1D"/><ellipse cx="160" cy="96" rx="76" ry="24" fill="#3D3733"/><ellipse cx="160" cy="94" rx="70" ry="20" fill="#FCFBF7"/><path d="M104 94 C112 78 134 76 146 92 C136 102 114 103 104 94 Z" fill="#F8C846"/><circle cx="165" cy="86" r="15" fill="#DE8D31"/><circle cx="185" cy="92" r="14" fill="#C97321"/><circle cx="152" cy="98" r="13" fill="#D4822A"/><path d="M142 84 Q158 76 170 86 T194 88 T156 98" stroke="#FFF6DF" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M146 91 Q164 84 178 94 T198 96" stroke="#5E2610" stroke-width="2.5" stroke-linecap="round" fill="none"/><text x="160" y="148" text-anchor="middle" fill="#F4C77B" font-size="13" font-weight="700">CUPBAP</text></svg>`,
+      cupbap_spam: `<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" class="food-svg"><rect width="320" height="220" fill="#F7DDD0"/><ellipse cx="160" cy="186" rx="90" ry="17" fill="rgba(55,25,15,0.14)"/><path d="M86 96 L234 96 L214 178 C212 185 188 190 160 190 C132 190 108 185 106 178 Z" fill="#2A2623"/><ellipse cx="160" cy="95" rx="74" ry="23" fill="#FCFBF7"/><path d="M102 92 Q122 72 146 84 Q142 104 114 104 Z" fill="#D1402A"/><rect x="148" y="76" width="38" height="22" rx="5" transform="rotate(-8 148 76)" fill="#E36D63"/><rect x="168" y="84" width="38" height="22" rx="5" transform="rotate(6 168 84)" fill="#EA7B71"/><circle cx="152" cy="99" r="7" fill="#F5A623"/><text x="160" y="148" text-anchor="middle" fill="#F9B59B" font-size="12" font-weight="700">SPAM KIMCHI</text></svg>`,
+      ramyun: `<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" class="food-svg"><rect width="320" height="220" fill="#FAE6CF"/><path d="M124 58 Q116 42 128 28 M160 52 Q152 34 166 20 M196 58 Q188 42 200 28" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity="0.8" fill="none"/><path d="M74 96 L246 96 C242 152 208 182 160 182 C112 182 78 152 74 96 Z" fill="#C93B2B"/><ellipse cx="160" cy="96" rx="86" ry="26" fill="#231F1D"/><ellipse cx="160" cy="96" rx="79" ry="22" fill="#CE3D1E"/><path d="M98 96 Q112 84 126 96 T154 96 T182 96 T210 96" stroke="#F7CE68" stroke-width="5.5" stroke-linecap="round" fill="none"/><path d="M104 104 Q118 92 132 104 T160 104 T188 104 T214 104" stroke="#F3BD4F" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="194" cy="90" rx="18" ry="12" fill="#FFFDF8"/><circle cx="195" cy="90" r="8" fill="#F59B1A"/></svg>`,
+      tteokbokki: `<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" class="food-svg"><rect width="320" height="220" fill="#F9D9D3"/><path d="M98 92 L222 92 L206 178 C204 184 185 188 160 188 C135 188 116 184 114 178 Z" fill="#FFFFFF" stroke="#E5D5C8" stroke-width="2"/><ellipse cx="160" cy="92" rx="62" ry="19" fill="#B82419"/><rect x="115" y="76" width="38" height="14" rx="7" transform="rotate(-18 115 76)" fill="#FFF4EC" stroke="#D93221" stroke-width="3"/><rect x="150" y="72" width="42" height="14" rx="7" transform="rotate(14 150 72)" fill="#FFF4EC" stroke="#D93221" stroke-width="3"/><rect x="128" y="90" width="40" height="14" rx="7" transform="rotate(6 128 90)" fill="#FFE6DD" stroke="#C82819" stroke-width="3"/></svg>`,
+      drinks: `<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" class="food-svg"><rect width="320" height="220" fill="#D5ECE6"/><path d="M178 24 L162 110" stroke="#E0532C" stroke-width="7" stroke-linecap="round"/><path d="M112 68 L208 68 L194 182 C192 187 177 190 160 190 C143 190 128 187 126 182 Z" fill="rgba(255,255,255,0.65)" stroke="#FFFFFF" stroke-width="2.5"/><path d="M116 84 L204 84 L191 178 C189 183 176 186 160 186 C144 186 131 183 129 178 Z" fill="#D97926"/><circle cx="192" cy="78" r="14" fill="#F8D23A" stroke="#FFF8D2" stroke-width="2"/></svg>`,
+      combo: `<svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" class="food-svg"><rect width="320" height="220" fill="#FCE8C8"/><path d="M188 52 L248 52 L240 140 L196 140 Z" fill="#D97422" stroke="#FFFFFF" stroke-width="2"/><path d="M70 100 L202 100 L186 174 C184 180 162 184 136 184 C110 184 88 180 86 174 Z" fill="#292522"/><ellipse cx="136" cy="100" rx="66" ry="20" fill="#FCFBF7"/><circle cx="122" cy="96" r="14" fill="#D4822A"/><circle cx="144" cy="94" r="15" fill="#E39738"/><rect x="16" y="14" width="114" height="28" rx="14" fill="#C93B2B"/><text x="73" y="32" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="800">⚡ 5-SEC COMBO</text></svg>`
+    };
+
+    // Pure-JS ISO 18004 QR SVG Generator (Byte mode, ECC M, Ver 1..6)
+    const QR = (() => {
+      const GF_EXP = new Uint8Array(512), GF_LOG = new Uint8Array(256);
+      let x = 1;
+      for (let i = 0; i < 255; i++) { GF_EXP[i] = x; GF_LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; }
+      for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+      const mul = (a, b) => (a && b) ? GF_EXP[GF_LOG[a] + GF_LOG[b]] : 0;
+      const rsPoly = (n) => {
+        let p = [1];
+        for (let i = 0; i < n; i++) {
+          const nx = new Array(p.length + 1).fill(0);
+          for (let j = 0; j < p.length; j++) { nx[j] ^= p[j]; nx[j + 1] ^= mul(p[j], GF_EXP[i]); }
+          p = nx;
+        }
+        return p;
+      };
+      const rs = (data, ecLen) => {
+        const g = rsPoly(ecLen), res = new Uint8Array(data.length + ecLen);
+        res.set(data);
+        for (let i = 0; i < data.length; i++) {
+          const c = res[i];
+          if (c) for (let j = 0; j < g.length; j++) res[i + j] ^= mul(g[j], c);
+        }
+        return res.slice(data.length);
+      };
+      const VER = { 1:[26,10,1,16], 2:[44,16,1,28], 3:[70,26,1,44], 4:[100,18,2,32], 5:[134,24,2,43], 6:[172,16,4,27] };
+      const ALIGN = { 1:[], 2:[6,18], 3:[6,22], 4:[6,26], 5:[6,30], 6:[6,34] };
+      const FMT = [0x5412,0x5125,0x5e7c,0x5b4b,0x45f9,0x40ce,0x4f97,0x4aa0];
+      const svg = (text, px = 160) => {
+        const bytes = new TextEncoder().encode(String(text)).slice(0, 106);
+        let ver = 1;
+        while (ver < 6 && Math.ceil((12 + bytes.length * 8) / 8) > VER[ver][2] * VER[ver][3]) ver++;
+        const [, ecLen, nb, dpb] = VER[ver];
+        const cap = nb * dpb, bits = [];
+        const push = (v, l) => { for (let i = l - 1; i >= 0; i--) bits.push((v >> i) & 1); };
+        push(4, 4); push(bytes.length, 8);
+        bytes.forEach((b) => push(b, 8));
+        push(0, Math.min(4, cap * 8 - bits.length));
+        while (bits.length % 8) bits.push(0);
+        for (let i = 0; bits.length < cap * 8; i++) push(i % 2 ? 0x11 : 0xec, 8);
+        const db = new Uint8Array(cap);
+        for (let i = 0; i < cap; i++) { let v = 0; for (let b = 0; b < 8; b++) v = (v << 1) | bits[i * 8 + b]; db[i] = v; }
+        const blks = [], ecb = [];
+        for (let i = 0; i < nb; i++) { const b = db.slice(i * dpb, (i + 1) * dpb); blks.push(b); ecb.push(rs(b, ecLen)); }
+        const cw = [];
+        for (let i = 0; i < dpb; i++) blks.forEach((b) => cw.push(b[i]));
+        for (let i = 0; i < ecLen; i++) ecb.forEach((e) => cw.push(e[i]));
+        const sz = ver * 4 + 17;
+        const m = Array.from({ length: sz }, () => new Int8Array(sz).fill(-1));
+        const fn = Array.from({ length: sz }, () => new Uint8Array(sz));
+        const sf = (r, c, v) => { if (r >= 0 && r < sz && c >= 0 && c < sz) { m[r][c] = v ? 1 : 0; fn[r][c] = 1; } };
+        const finder = (r0, c0) => {
+          for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+            const b = r === -1 || r === 7 || c === -1 || c === 7;
+            const o = r === 0 || r === 6 || c === 0 || c === 6;
+            const inn = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+            sf(r0 + r, c0 + c, !b && (o || inn));
+          }
+        };
+        finder(0, 0); finder(0, sz - 7); finder(sz - 7, 0);
+        for (const r of ALIGN[ver]) for (const c of ALIGN[ver]) {
+          if (fn[r][c] || (r <= 8 && c <= 8) || (r <= 8 && c >= sz - 9) || (r >= sz - 9 && c <= 8)) continue;
+          for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) sf(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) === 2 || (!dr && !dc));
+        }
+        for (let i = 8; i < sz - 8; i++) { if (!fn[6][i]) sf(6, i, i % 2 === 0); if (!fn[i][6]) sf(i, 6, i % 2 === 0); }
+        sf(sz - 8, 8, 1);
+        for (let i = 0; i <= 8; i++) { fn[8][i] = 1; fn[i][8] = 1; }
+        for (let i = sz - 8; i < sz; i++) { fn[8][i] = 1; fn[i][8] = 1; }
+        const dbits = []; cw.forEach((v) => { for (let b = 7; b >= 0; b--) dbits.push((v >> b) & 1); });
+        let bi = 0, up = true;
+        for (let col = sz - 1; col > 0; col -= 2) {
+          if (col === 6) col--;
+          for (let i = 0; i < sz; i++) {
+            const r = up ? sz - 1 - i : i;
+            for (let dc = 0; dc < 2; dc++) if (!fn[r][col - dc]) m[r][col - dc] = bi < dbits.length ? dbits[bi++] : 0;
+          }
+          up = !up;
+        }
+        const pred = (r, c) => (r + c) % 2 === 0;
+        for (let r = 0; r < sz; r++) for (let c = 0; c < sz; c++) if (!fn[r][c] && pred(r, c)) m[r][c] ^= 1;
+        const fmt = FMT[0];
+        const c1 = [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
+        const c2 = [[sz-1,8],[sz-2,8],[sz-3,8],[sz-4,8],[sz-5,8],[sz-6,8],[sz-7,8],[8,sz-8],[8,sz-7],[8,sz-6],[8,sz-5],[8,sz-4],[8,sz-3],[8,sz-2],[8,sz-1]];
+        for (let i = 0; i < 15; i++) { const b = (fmt >> (14 - i)) & 1; m[c1[i][0]][c1[i][1]] = b; m[c2[i][0]][c2[i][1]] = b; }
+        const tot = sz + 6;
+        let rects = "";
+        for (let r = 0; r < sz; r++) for (let c = 0; c < sz; c++) if (m[r][c] === 1) rects += `<rect x="${c + 3}" y="${r + 3}" width="1" height="1" fill="#1F1B18"/>`;
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${tot} ${tot}" width="${px}" height="${px}" shape-rendering="crispEdges"><rect width="${tot}" height="${tot}" fill="#FFF" rx="1"/>${rects}</svg>`;
+      };
+      return { svg };
+    })();
+
+    const INV_ITEMS = [
+      { id: "skewer_eomuk", name_ko: "어묵 꼬치", unit: "꼬치", defaultQty: 150 },
+      { id: "bowl_cupbap", name_ko: "컵밥 전용 용기", unit: "개", defaultQty: 80 },
+      { id: "bowl_ramyun", name_ko: "라면 전용 용기", unit: "개", defaultQty: 50 },
+      { id: "cup_tteok", name_ko: "떡볶이 컵", unit: "개", defaultQty: 60 },
+      { id: "can_drink", name_ko: "음료 캔/병", unit: "캔", defaultQty: 100 },
+    ];
+
+    const MENU = [
+      { id: "c1", cat: "combo", ko: "오뎅 2꼬치 + 국물", en: "Eomuk 2 Skewers + Broth", tl: "2 Fishcake + Sabaw", price: 50, quick: true, img: EOMUK_PHOTO, consumes: { skewer_eomuk: 2 } },
+      { id: "c2", cat: "combo", ko: "오뎅 2꼬치 + 아이스티", en: "Eomuk 2pcs + Iced Tea", tl: "2 Eomuk + Iced Tea", price: 100, quick: true, img: "svg:combo", consumes: { skewer_eomuk: 2, can_drink: 1 } },
+      { id: "c3", cat: "combo", ko: "스팸김치 컵밥 (단품)", en: "Spam Kimchi Cupbap", tl: "Spam Kimchi Rice", price: 100, quick: true, img: "svg:cupbap_spam", consumes: { bowl_cupbap: 1 } },
+      { id: "c4", cat: "combo", ko: "치킨마요 컵밥 + 음료", en: "Chicken Mayo + Drink", tl: "Chicken Cupbap + Drink", price: 150, quick: true, img: "svg:cupbap_chicken", consumes: { bowl_cupbap: 1, can_drink: 1 } },
+      { id: "c5", cat: "combo", ko: "컵 떡볶이 + 오뎅 1꼬치", en: "Tteokbokki + 1 Eomuk", tl: "Tteokbokki + 1 Stick", price: 150, quick: true, img: "svg:tteokbokki", consumes: { cup_tteok: 1, skewer_eomuk: 1 } },
+      { id: "c6", cat: "combo", ko: "K-분식 풀세트 (컵밥+떡볶이+음료)", en: "Full K-Snack Set", tl: "Full Combo Meal", price: 200, quick: true, img: "svg:combo", consumes: { bowl_cupbap: 1, cup_tteok: 1, can_drink: 1 } },
+      { id: "e1", cat: "eomuk", ko: "부산 오뎅 1꼬치", en: "Busan Eomuk 1pc", tl: "1 Fishcake Stick", price: 30, quick: false, img: EOMUK_PHOTO, opts: [{ id: "mild", lbl: "Mild Broth", p: 0 }, { id: "spicy", lbl: "Spicy Broth", p: 0 }], consumes: { skewer_eomuk: 1 } },
+      { id: "b1", cat: "cupbap", ko: "치킨마요 컵밥", en: "Chicken Mayo Cupbap", tl: "Chicken Mayo Bowl", price: 120, quick: false, img: "svg:cupbap_chicken", opts: [{ id: "base", lbl: "Standard", p: 0 }, { id: "egg", lbl: "+Fried Egg (+₱20)", p: 20 }, { id: "cheese", lbl: "+Cheese (+₱30)", p: 30 }], consumes: { bowl_cupbap: 1 } },
+      { id: "r1", cat: "ramyun", ko: "한국 계란 라면", en: "Korean Egg Ramyun", tl: "Hot Ramyun w/ Egg", price: 120, quick: false, img: "svg:ramyun", opts: [{ id: "mild", lbl: "Mild", p: 0 }, { id: "orig", lbl: "Spicy Original", p: 0 }, { id: "cheese", lbl: "+Cheese (+₱30)", p: 30 }], consumes: { bowl_ramyun: 1 } },
+      { id: "t1", cat: "tteokbokki", ko: "컵 떡볶이", en: "Cup Tteokbokki", tl: "Chewy Rice Cakes", price: 100, quick: false, img: "svg:tteokbokki", opts: [{ id: "sweet", lbl: "Sweet Mild", p: 0 }, { id: "spicy", lbl: "Spicy", p: 0 }], consumes: { cup_tteok: 1 } },
+      { id: "d1", cat: "drink", ko: "아이스티 / 한국 캔음료", en: "Iced Tea / Korean Can", tl: "Malamig na Drinks", price: 50, quick: true, img: "svg:drinks", consumes: { can_drink: 1 } },
+    ];
+
+    const STORE_KEY = "ksnack_ph_preview_v2";
+    const defaultStore = () => ({
+      pin: "7777",
+      branches: [
+        { id: "school-a", name: "1호점 · A학교 칸틴 (POS)", mode: "pos", float: 2500, gcash: "0917-101-7777", alloc: { skewer_eomuk: 150, bowl_cupbap: 80, bowl_ramyun: 50, cup_tteok: 60, can_drink: 100 } },
+        { id: "school-b", name: "2호점 · B학교 정문 (POS)", mode: "pos", float: 2500, gcash: "0917-202-7777", alloc: { skewer_eomuk: 150, bowl_cupbap: 80, bowl_ramyun: 50, cup_tteok: 60, can_drink: 100 } },
+        { id: "univ-main", name: "3호점 · 대학가 로드샵 (키오스크)", mode: "kiosk", float: 3000, gcash: "0917-303-7777", alloc: { skewer_eomuk: 150, bowl_cupbap: 80, bowl_ramyun: 50, cup_tteok: 60, can_drink: 100 } },
+      ],
+      orders: [
+        { id: "o1", num: 101, branchId: "school-a", mode: "pos", table: "Counter", items: [{ id: "c4", ko: "치킨마요 컵밥 + 음료", en: "Chicken Mayo + Drink", qty: 1, price: 150, consumes: { bowl_cupbap: 1, can_drink: 1 } }], total: 150, pay: "cash", paid: true, status: "completed", ts: Date.now() - 2400000 },
+        { id: "o2", num: 102, branchId: "school-a", mode: "pos", table: "Counter", items: [{ id: "c1", ko: "오뎅 2꼬치 + 국물", en: "Eomuk 2 Skewers + Broth", qty: 2, price: 50, consumes: { skewer_eomuk: 2 } }], total: 100, pay: "gcash", paid: true, status: "completed", ts: Date.now() - 1800000 },
+        { id: "o3", num: 101, branchId: "univ-main", mode: "kiosk", table: "Table T2", items: [{ id: "r1", ko: "한국 계란 라면", en: "Korean Egg Ramyun", qty: 1, price: 120, consumes: { bowl_ramyun: 1 } }], total: 120, pay: "cash", paid: false, status: "waiting_payment", ts: Date.now() - 200000 },
+      ],
+      punchCards: [
+        { code: "PC-101", branchId: "school-a", student: "Marco (G10)", pkg: 200, total: 4, left: 3, pay: "cash" },
+      ],
+      voidRequests: [],
+      closeouts: [],
+    });
+
+    let store = (() => {
+      try {
+        const raw = localStorage.getItem(STORE_KEY);
+        return raw ? JSON.parse(raw) : defaultStore();
+      } catch {
+        return defaultStore();
+      }
+    })();
+    const saveStore = () => localStorage.setItem(STORE_KEY, JSON.stringify(store));
+
+    const _qp = new URLSearchParams(window.location.search);
+    const ui = {
+      branchId: _qp.get("branchId") || "school-a",
+      tab: _qp.get("mode") || "pos",
+      locked: _qp.get("lock") === "1",
+      adminUnlocked: false,
+      lang: "ko_en",
+      posFilter: "combo",
+      kioskFilter: "all",
+      cart: [],
+      tender: 0,
+      instant: true,
+      lastOrder: null,
+    };
+
+    const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const php = (n) => `₱${Number(n || 0).toLocaleString("en-PH")}`;
+    const activeBranch = () => store.branches.find((b) => b.id === ui.branchId) || store.branches[0];
+
+    function toast(msg, ok = true) {
+      const box = document.getElementById("toast-box");
+      const el = document.createElement("div");
+      el.className = `px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg ${ok ? "bg-[#177A52]" : "bg-[#B91C1C]"}`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+
+    function openModal(html) {
+      document.getElementById("modal-box").innerHTML = html;
+      document.getElementById("modal-root").classList.remove("hidden");
+    }
+    function closeModal() {
+      document.getElementById("modal-root").classList.add("hidden");
+    }
+    document.getElementById("modal-root").addEventListener("click", (e) => {
+      if (e.target.id === "modal-root") closeModal();
+    });
+
+    function visualHtml(item) {
+      if (item.img.startsWith("data:")) return `<img src="${item.img}" alt="${esc(item.en)}" class="food-svg"/>`;
+      return ART[item.img.slice(4)] || ART.combo;
+    }
+
+    function addCart(item, opt = null) {
+      const unitPrice = item.price + (opt ? opt.p : 0);
+      const key = `${item.id}:${opt ? opt.id : "base"}`;
+      const ex = ui.cart.find((c) => c.key === key);
+      if (ex) ex.qty += 1;
+      else ui.cart.push({ key, id: item.id, ko: item.ko, en: item.en, tl: item.tl, optLbl: opt ? opt.lbl : "", price: unitPrice, qty: 1, consumes: item.consumes });
+      render();
+    }
+
+    function nextOrderNum(branchId) {
+      const nums = store.orders.filter((o) => o.branchId === branchId).map((o) => o.num);
+      return (nums.length ? Math.max(...nums) : 100) + 1;
+    }
+
+    function renderHeader() {
+      const top = document.getElementById("top-bar");
+      const unl = document.getElementById("btn-unlock-kiosk");
+      const lck = document.getElementById("btn-lock-kiosk");
+      top.classList.toggle("hidden", ui.tab === "kiosk" && ui.locked);
+      unl.classList.toggle("hidden", !(ui.tab === "kiosk" && ui.locked));
+      lck.classList.toggle("hidden", ui.tab !== "kiosk");
+
+      const sel = document.getElementById("branch-select");
+      sel.innerHTML = store.branches.map((b) => `<option value="${esc(b.id)}" ${b.id === ui.branchId ? "selected" : ""}>${esc(b.name)}</option>`).join("");
+
+      const tabs = [
+        ["pos", "⚡ 직원 초고속 POS"],
+        ["kiosk", "📱 손님 키오스크"],
+        ["kitchen", `🍳 주방 KDS (${store.orders.filter((o) => o.branchId === ui.branchId && ["waiting_payment","preparing","ready"].includes(o.status)).length})`],
+        ["closeout", "🔒 블라인드 마감"],
+        ["admin", "📊 사장님 감시"],
+        ["signage", "🖨️ 돈통·QR 안내문"],
+      ];
+      document.getElementById("nav-tabs").innerHTML = tabs
+        .map(([k, lbl]) => `<button data-tab="${k}" class="px-2.5 py-1.5 rounded-lg text-xs font-bold border ${ui.tab === k ? "bg-[#C93B2B] border-[#C93B2B] text-white" : "bg-[#2B2621] border-[#3F3831] text-[#E6DDD2]"}">${lbl}</button>`)
+        .join("");
+    }
+
+    function render() {
+      renderHeader();
+      const app = document.getElementById("app");
+      const br = activeBranch();
+
+      if (ui.tab === "pos") {
+        const items = MENU.filter((m) => ui.posFilter === "combo" ? m.quick : ui.posFilter === "all" ? true : m.cat === ui.posFilter);
+        const total = ui.cart.reduce((s, c) => s + c.price * c.qty, 0);
+        const tendered = ui.tender > 0 ? ui.tender : total;
+        const change = Math.max(0, tendered - total);
+        const brOrders = store.orders.filter((o) => o.branchId === ui.branchId).slice().reverse().slice(0, 8);
+
+        app.innerHTML = `
+          <div class="bg-[#27221E] text-white rounded-2xl p-3.5 mb-4 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h2 class="font-extrabold text-base">⚡ 학교분점 초고속 2-Tap POS — ${esc(br.name)}</h2>
+              <p class="text-xs text-[#DFD3C5]">10:30 쉬는시간 30분 속도전: 팝업 없이 1탭 담기 → 1탭 결제 (거스름돈 ₱50 자동계산)</p>
+            </div>
+            <button id="btn-pc-modal" class="bg-[#D9822B] text-white text-xs font-bold px-3 py-2 rounded-xl">🎫 단골 식권 (${store.punchCards.filter(p=>p.branchId===ui.branchId).length})</button>
+          </div>
+
+          <div class="grid lg:grid-cols-3 gap-4 items-start">
+            <div class="lg:col-span-2 space-y-4">
+              <div class="flex flex-wrap gap-1.5">
+                ${[["combo","⚡ ₱50 초고속 세트"],["all","전체"],["eomuk","🍢 오뎅"],["cupbap","🍚 컵밥"],["ramyun","🍜 라면"],["tteokbokki","🌶️ 떡볶이"],["drink","🥤 음료"]]
+                  .map(([k, l]) => `<button data-pfilter="${k}" class="px-3 py-1.5 rounded-full text-xs font-bold border ${ui.posFilter===k ? "bg-[#1F1B18] text-white border-[#1F1B18]" : "bg-white border-[#D0C3B2]"}">${l}</button>`).join("")}
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                ${items.map((m) => `
+                  <button data-padd="${m.id}" class="text-left p-3 rounded-2xl border-2 transition active:scale-95 flex flex-col justify-between min-h-[112px] ${m.quick ? "bg-[#FFF8ED] border-[#EBC28B]" : "bg-white border-[#E5DCCF]"} hover:border-[#C93B2B]">
+                    <div>
+                      <div class="font-extrabold text-sm leading-snug">${esc(m.ko)}</div>
+                      <div class="text-[11px] text-[#655B52]">${esc(m.en)}</div>
+                    </div>
+                    <div class="flex justify-between items-end mt-2">
+                      <span class="num text-lg font-black text-[#C93B2B]">${php(m.price)}</span>
+                      ${m.quick ? `<span class="text-[10px] font-extrabold bg-[#FDECE9] text-[#C93B2B] px-2 py-0.5 rounded-full">1-TAP</span>` : ""}
+                    </div>
+                  </button>`).join("")}
+              </div>
+
+              <div class="bg-white rounded-2xl border border-[#E5DCCF] p-3.5">
+                <div class="font-bold text-xs mb-2">📋 방금 찍힌 주문 (직원은 삭제 불가 · 취소 승인 요청만 가능)</div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs">
+                    <thead><tr class="bg-[#F4EDE2] text-[#655B52]"><th class="p-2 text-left">번호</th><th class="p-2 text-left">메뉴</th><th class="p-2 text-left">금액</th><th class="p-2 text-left">결제</th><th class="p-2 text-left">관리</th></tr></thead>
+                    <tbody>
+                      ${brOrders.map((o) => `
+                        <tr class="border-t border-[#E5DCCF]">
+                          <td class="p-2 font-black num">#${o.num}</td>
+                          <td class="p-2">${o.items.map((i) => `${esc(i.ko)}×${i.qty}`).join(", ")}</td>
+                          <td class="p-2 font-bold num">${php(o.total)}</td>
+                          <td class="p-2 uppercase">${esc(o.pay)} ${o.status==="voided" ? `<span class="text-[#B91C1C]">(취소됨)</span>` : o.voidReq ? `<span class="text-[#D9822B]">(승인대기)</span>` : ""}</td>
+                          <td class="p-2 flex gap-1">
+                            <button data-slip="${o.id}" class="px-2 py-1 rounded bg-[#F4EDE2] font-bold">🖨️</button>
+                            ${o.status!=="voided" && !o.voidReq ? `<button data-void="${o.id}" class="px-2 py-1 rounded bg-[#FEF2F2] text-[#B91C1C] font-bold">취소요청</button>` : ""}
+                          </td>
+                        </tr>`).join("") || `<tr><td colspan="5" class="p-3 text-center text-[#655B52]">주문 없음</td></tr>`}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <aside class="bg-white rounded-2xl border border-[#E5DCCF] p-4 shadow-sm sticky top-16">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-extrabold text-base">🧾 2-Tap 계산대</h3>
+                <button id="btn-clear-cart" class="text-xs px-2 py-1 rounded bg-[#F4EDE2] font-bold">비우기</button>
+              </div>
+              <div class="space-y-1.5 max-h-56 overflow-y-auto my-2">
+                ${ui.cart.map((c) => `
+                  <div class="flex justify-between items-center bg-[#F4EDE2] p-2 rounded-xl text-xs">
+                    <div><div class="font-bold">${esc(c.ko)}</div><div class="text-[#C93B2B] font-bold num">${php(c.price * c.qty)}</div></div>
+                    <div class="flex items-center gap-1.5">
+                      <button data-qminus="${c.key}" class="w-7 h-7 bg-white rounded-lg border font-black">−</button>
+                      <strong class="num">${c.qty}</strong>
+                      <button data-qplus="${c.key}" class="w-7 h-7 bg-white rounded-lg border font-black">+</button>
+                    </div>
+                  </div>`).join("") || `<div class="text-center text-xs text-[#655B52] py-6">메뉴 버튼을 눌러주세요!</div>`}
+              </div>
+
+              <div class="flex justify-between items-center py-2.5 border-y border-[#E5DCCF] my-2">
+                <strong class="text-sm">합계</strong>
+                <strong class="text-2xl font-black text-[#C93B2B] num">${php(total)}</strong>
+              </div>
+
+              <div class="bg-[#FFF8ED] border border-[#EBD2AD] rounded-xl p-2.5 mb-2.5">
+                <div class="text-[11px] font-bold mb-1">💵 받은 현금 (거스름돈 계산)</div>
+                <div class="grid grid-cols-4 gap-1">
+                  ${[0,100,200,500].map((v) => `<button data-tender="${v}" class="py-1.5 rounded-lg text-xs font-extrabold border ${ui.tender===v ? "bg-[#1F1B18] text-white" : "bg-white"}">${v===0?"딱맞게":`₱${v}`}</button>`).join("")}
+                </div>
+                ${total > 0 ? `<div class="mt-2 bg-[#E6F5EE] text-[#177A52] rounded-lg px-2.5 py-1.5 text-xs font-extrabold flex justify-between num"><span>거스름돈</span><span>${php(change)} (₱50×${Math.floor(change/50)}장)</span></div>` : ""}
+              </div>
+
+              <label class="flex items-center gap-2 text-xs font-bold mb-2.5">
+                <input id="chk-inst" type="checkbox" ${ui.instant ? "checked" : ""} /> ⚡ 쉬는시간 즉시 배식 (바로 완료)
+              </label>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button id="pos-cash" ${total===0?"disabled":""} class="col-span-2 py-3 rounded-xl bg-[#177A52] text-white font-extrabold text-sm disabled:opacity-40">💵 현금확인 완료 (Drop-Box OK)</button>
+                <button id="pos-gcash" ${total===0?"disabled":""} class="py-2.5 rounded-xl bg-[#1E5EA8] text-white font-bold text-xs disabled:opacity-40">📱 GCash</button>
+                <button id="pos-card" ${total===0?"disabled":""} class="py-2.5 rounded-xl bg-[#F4EDE2] font-bold text-xs disabled:opacity-40">💳 카드</button>
+                <button id="pos-punch" ${total===0?"disabled":""} class="col-span-2 py-2.5 rounded-xl bg-[#D9822B] text-white font-bold text-xs disabled:opacity-40">🎫 단골 식권 차감 (${total ? Math.ceil(total/50) : 0}칸)</button>
+              </div>
+            </aside>
+          </div>
+        `;
+      } else if (ui.tab === "kiosk") {
+        const items = MENU.filter((m) => ui.kioskFilter === "all" || m.cat === ui.kioskFilter);
+        const total = ui.cart.reduce((s, c) => s + c.price * c.qty, 0);
+        const titleFor = (m) => ui.lang === "ko" ? m.ko : ui.lang === "en" ? m.en : ui.lang === "tl" ? m.tl : `${m.ko} · ${m.en}`;
+
+        app.innerHTML = `
+          <div class="bg-[#27221E] text-white rounded-2xl p-3.5 mb-4 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h2 class="font-extrabold text-base">📱 셀프 키오스크 & 테이블 QR — ${esc(br.name)}</h2>
+              <p class="text-xs text-[#DFD3C5]">다국어 지원 · PayMongo 동적 QR 자동입금 테스트 가능 · 화면잠금 지원</p>
+            </div>
+            <div class="flex gap-1.5">
+              ${[["ko_en","EN+한"],["en","English"],["ko","한국어"],["tl","Taglish"]].map(([c, l]) => `<button data-lang="${c}" class="px-2.5 py-1 rounded-lg text-xs font-bold ${ui.lang===c ? "bg-[#C93B2B] text-white" : "bg-[#312B26] text-[#E6DDD2]"}">${l}</button>`).join("")}
+            </div>
+          </div>
+
+          ${ui.lastOrder ? `
+            <div class="bg-[#E6F5EE] border-2 border-[#177A52] rounded-2xl p-4 mb-4 flex flex-wrap justify-between items-center gap-2">
+              <div>
+                <div class="text-xs font-extrabold text-[#177A52]">ORDER CONFIRMED</div>
+                <div class="text-xl font-black num">주문번호 #${ui.lastOrder.num} · ${php(ui.lastOrder.total)}</div>
+                <div class="text-xs">${ui.lastOrder.paid ? "✅ 결제 확인! 바로 주방 조리가 시작되었습니다." : "💵 지폐를 펴서 직원에게 보여주시고 투명 돈통에 넣어주세요!"}</div>
+              </div>
+              <div class="flex gap-2">
+                <button data-slip="${ui.lastOrder.id}" class="px-3 py-1.5 rounded-xl bg-white border text-xs font-bold">🖨️ 58mm 주문표</button>
+                <button id="btn-kiosk-new" class="px-3 py-1.5 rounded-xl bg-[#177A52] text-white text-xs font-bold">새 주문</button>
+              </div>
+            </div>` : ""}
+
+          <div class="grid lg:grid-cols-3 gap-4 items-start">
+            <div class="lg:col-span-2 space-y-3">
+              <div class="flex flex-wrap gap-1.5">
+                ${[["all","전체"],["combo","⚡ 5초 콤보"],["eomuk","🍢 오뎅"],["cupbap","🍚 컵밥"],["ramyun","🍜 라면"],["tteokbokki","🌶️ 떡볶이"],["drink","🥤 음료"]]
+                  .map(([k, l]) => `<button data-kfilter="${k}" class="px-3 py-1.5 rounded-full text-xs font-bold border ${ui.kioskFilter===k ? "bg-[#1F1B18] text-white" : "bg-white"}">${l}</button>`).join("")}
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                ${items.map((m) => `
+                  <div data-kadd="${m.id}" class="bg-white rounded-2xl border border-[#E5DCCF] overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition flex flex-col">
+                    <div class="h-36 bg-[#F4EDE2] relative overflow-hidden">
+                      ${visualHtml(m)}
+                      ${m.quick ? `<span class="absolute top-2 left-2 bg-[#C93B2B] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">⚡ 5-SEC</span>` : ""}
+                    </div>
+                    <div class="p-3 flex-1 flex flex-col justify-between">
+                      <div class="font-extrabold text-sm">${esc(titleFor(m))}</div>
+                      <div class="flex justify-between items-center mt-2">
+                        <span class="num font-black text-base text-[#C93B2B]">${php(m.price)}</span>
+                        <span class="bg-[#C93B2B] text-white text-xs font-bold px-2.5 py-1 rounded-lg">+ 담기</span>
+                      </div>
+                    </div>
+                  </div>`).join("")}
+              </div>
+            </div>
+
+            <aside class="bg-white rounded-2xl border border-[#E5DCCF] p-4 shadow-sm sticky top-16">
+              <h3 class="font-extrabold text-base mb-2">🛒 주문 내역 (Your Order)</h3>
+              <div class="space-y-1.5 max-h-60 overflow-y-auto my-2">
+                ${ui.cart.map((c) => `
+                  <div class="flex justify-between items-center bg-[#F4EDE2] p-2 rounded-xl text-xs">
+                    <div><div class="font-bold">${esc(c.ko)} ${c.optLbl?`(${esc(c.optLbl)})`:""}</div><div class="text-[#C93B2B] font-bold num">${php(c.price*c.qty)}</div></div>
+                    <div class="flex items-center gap-1.5">
+                      <button data-qminus="${c.key}" class="w-7 h-7 bg-white rounded-lg border font-black">−</button>
+                      <strong class="num">${c.qty}</strong>
+                      <button data-qplus="${c.key}" class="w-7 h-7 bg-white rounded-lg border font-black">+</button>
+                    </div>
+                  </div>`).join("") || `<div class="text-center text-xs text-[#655B52] py-6">메뉴를 터치해 담아주세요</div>`}
+              </div>
+              <div class="flex justify-between items-center py-2.5 border-y border-[#E5DCCF] my-2">
+                <strong>합계</strong><strong class="text-2xl font-black text-[#C93B2B] num">${php(total)}</strong>
+              </div>
+              <div class="bg-[#FFF8ED] border border-[#EBD2AD] rounded-xl p-2 text-[11px] mb-3">
+                💵 <strong>Cash Drop-Box:</strong> 지폐를 펴서 직원에게 보여주고 투명 돈통에 넣어주세요! (Folded bills accepted — unfold flat!)
+              </div>
+              <div class="space-y-2">
+                <button id="kiosk-cash" ${total===0?"disabled":""} class="w-full py-3 rounded-xl bg-[#177A52] text-white font-extrabold text-sm disabled:opacity-40">💵 현금 결제 (Cash Box)</button>
+                <button id="kiosk-gcash" ${total===0?"disabled":""} class="w-full py-3 rounded-xl bg-[#1E5EA8] text-white font-extrabold text-sm disabled:opacity-40">📱 GCash / Dynamic QR Ph</button>
+                <button id="kiosk-card" ${total===0?"disabled":""} class="w-full py-2.5 rounded-xl bg-[#F4EDE2] font-bold text-xs disabled:opacity-40">💳 카드 (At Counter)</button>
+              </div>
+            </aside>
+          </div>
+        `;
+      } else if (ui.tab === "kitchen") {
+        const brOrders = store.orders.filter((o) => o.branchId === ui.branchId);
+        const col = (st, title, tone) => {
+          const list = brOrders.filter((o) => o.status === st);
+          return `
+            <div class="bg-white rounded-2xl border border-[#E5DCCF] p-3 min-h-[420px]">
+              <div class="flex justify-between items-center pb-2 mb-3 border-b-2 border-[#E5DCCF]">
+                <strong class="text-sm">${title} (${list.length})</strong>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${tone}">${st==="waiting_payment"?"조리 금지!":st==="preparing"?"조리 중":"번호 호출"}</span>
+              </div>
+              ${list.map((o) => `
+                <div class="rounded-xl border-2 p-3 mb-2.5 ${st==="waiting_payment"?"border-amber-400 bg-amber-50":st==="ready"?"border-[#177A52] bg-[#E6F5EE]":"border-[#E5DCCF]"}">
+                  <div class="flex justify-between items-center mb-1.5">
+                    <strong class="text-xl font-black num">#${o.num}</strong>
+                    <span class="text-[11px] font-bold px-2 py-0.5 bg-white rounded-full border">${esc(o.table)}</span>
+                  </div>
+                  <div class="text-xs font-bold space-y-0.5 mb-2">${o.items.map((i)=>`<div>• ${esc(i.ko)} × ${i.qty}</div>`).join("")}</div>
+                  <div class="text-xs font-black num mb-2">${php(o.total)} (${o.pay.toUpperCase()}) ${o.total>=500?`<span class="text-[#9A530F] bg-[#FEF4E4] px-1.5 py-0.5 rounded">⚠️ ₱500+ 수기SI</span>`:""}</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${st==="waiting_payment" ? `
+                      <button data-kpay="${o.id}" data-pm="cash" class="flex-1 py-1.5 rounded-lg bg-[#177A52] text-white text-xs font-bold">💵 현금확인</button>
+                      <button data-kpay="${o.id}" data-pm="gcash" class="flex-1 py-1.5 rounded-lg bg-[#1E5EA8] text-white text-xs font-bold">📱 GCash</button>
+                    ` : st==="preparing" ? `
+                      <button data-knext="${o.id}" data-st="ready" class="flex-1 py-1.5 rounded-lg bg-[#177A52] text-white text-xs font-bold">✅ 조리완료</button>
+                    ` : `
+                      <button data-knext="${o.id}" data-st="completed" class="flex-1 py-1.5 rounded-lg bg-[#C93B2B] text-white text-xs font-bold">📦 전달완료</button>
+                    `}
+                    <button data-slip="${o.id}" class="px-2.5 py-1.5 rounded-lg bg-white border text-xs font-bold">🖨️</button>
+                    ${!o.voidReq ? `<button data-void="${o.id}" class="px-2.5 py-1.5 rounded-lg bg-[#FEF2F2] text-[#B91C1C] text-xs font-bold">취소요청</button>` : `<span class="text-[11px] text-[#9A530F] font-bold">취소승인대기</span>`}
+                  </div>
+                </div>`).join("") || `<div class="text-center text-xs text-[#655B52] py-10">주문 없음</div>`}
+            </div>`;
+        };
+        app.innerHTML = `
+          <div class="bg-[#27221E] text-white rounded-2xl p-3.5 mb-4">
+            <h2 class="font-extrabold text-base">🍳 주방 & 픽업 KDS — ${esc(br.name)}</h2>
+            <p class="text-xs text-[#DFD3C5]">주문번호표 결제 확인 전에는 절대 조리 금지! 직원은 삭제 불가 (사장님 PIN 취소요청만 가능)</p>
+          </div>
+          <div class="grid md:grid-cols-3 gap-3">
+            ${col("waiting_payment", "💵 결제 확인 대기", "bg-[#FEF4E4] text-[#9A530F]")}
+            ${col("preparing", "🔥 조리 중", "bg-[#FDECE9] text-[#C93B2B]")}
+            ${col("ready", "🛎️ 픽업 대기", "bg-[#E6F5EE] text-[#177A52]")}
+          </div>`;
+      } else if (ui.tab === "closeout") {
+        app.innerHTML = `
+          <div class="bg-[#27221E] text-white rounded-2xl p-3.5 mb-4">
+            <h2 class="font-extrabold text-base">🔒 알바생 블라인드 마감 — ${esc(br.name)}</h2>
+            <p class="text-xs text-[#DFD3C5]">보안 모드: 예상 현금 매출과 남아야 할 꼬치·용기 수량은 직원에게 절대 보이지 않습니다!</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-[#E5DCCF] p-5 max-w-3xl mx-auto space-y-4">
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div><label class="text-xs font-bold block mb-1">지점</label><input class="w-full border rounded-xl px-3 py-2 text-sm bg-[#F4EDE2]" value="${esc(br.name)}" disabled /></div>
+              <div><label class="text-xs font-bold block mb-1">담당 직원 이름</label><input id="cls-staff" class="w-full border rounded-xl px-3 py-2 text-sm" placeholder="예: Maria" value="Maria" /></div>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-sm mb-2">1단계. 현금통 지폐 권종별 실제 개수</h3>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                ${[1000,500,200,100,50,20].map((d) => `<div><label class="text-xs font-bold">₱${d}</label><input type="number" min="0" value="0" data-cden="${d}" class="cls-den w-full border rounded-xl px-2.5 py-1.5 text-sm num" /></div>`).join("")}
+                <div><label class="text-xs font-bold">동전(₱)</label><input type="number" min="0" value="0" data-cden="1" class="cls-den w-full border rounded-xl px-2.5 py-1.5 text-sm num" /></div>
+              </div>
+              <div class="mt-2 bg-[#F4EDE2] rounded-xl p-3 flex justify-between items-center font-extrabold">
+                <span class="text-xs">내가 센 현금 합계 (시재 포함)</span>
+                <span id="cls-total" class="text-xl num">₱0</span>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-sm mb-2">2단계. 남은 실물 용기 · 꼬치 · 음료 수 (1:1 역산)</h3>
+              <div class="grid sm:grid-cols-2 gap-2">
+                ${INV_ITEMS.map((i) => `
+                  <div class="flex items-center justify-between border rounded-xl px-3 py-2">
+                    <span class="text-xs font-bold">${esc(i.name_ko)}</span>
+                    <div class="flex items-center gap-1"><input type="number" min="0" value="${i.defaultQty}" data-crem="${i.id}" class="cls-rem w-20 border rounded-lg px-2 py-1 text-sm num text-right" /><span class="text-xs">${esc(i.unit)}</span></div>
+                  </div>`).join("")}
+              </div>
+            </div>
+            <button id="btn-cls-submit" class="w-full py-3 rounded-xl bg-[#C93B2B] text-white font-extrabold">🔒 블라인드 마감 보고 제출 (오차는 사장님 화면에서만 확인)</button>
+          </div>`;
+      } else if (ui.tab === "admin") {
+        if (!ui.adminUnlocked) {
+          app.innerHTML = `
+            <div class="bg-white rounded-2xl border border-[#E5DCCF] p-6 max-w-sm mx-auto my-10 text-center space-y-3">
+              <span class="text-xs font-extrabold bg-[#FDECE9] text-[#C93B2B] px-3 py-1 rounded-full">OWNER ONLY</span>
+              <h2 class="text-lg font-extrabold">📊 사장님 감시 대시보드</h2>
+              <p class="text-xs text-[#655B52]">초기 PIN: <strong>7777</strong></p>
+              <input id="adm-pin" type="password" value="7777" class="w-full border rounded-xl px-3 py-2 text-center text-xl tracking-widest num" />
+              <button id="btn-adm-login" class="w-full py-3 rounded-xl bg-[#C93B2B] text-white font-extrabold">🔓 잠금 해제</button>
+            </div>`;
+        } else {
+          const allPaid = store.orders.filter((o) => o.paid && o.status !== "voided");
+          const totSales = allPaid.reduce((s, o) => s + o.total, 0) + store.punchCards.reduce((s, p) => s + p.pkg, 0);
+          const annProj = Math.max(totSales, 5500) * 260;
+          const vatPct = Math.min(100, Math.round((annProj / 3000000) * 100));
+
+          app.innerHTML = `
+            <div class="bg-[#27221E] text-white rounded-2xl p-3.5 mb-4 flex justify-between items-center">
+              <div>
+                <h2 class="font-extrabold text-base">📊 사장님 다지점 통합 감시 (현금 오차 · 1:1 꼬치/용기 적발)</h2>
+                <p class="text-xs text-[#DFD3C5]">블라인드 마감 탭에서 일부러 현금/용기 개수를 다르게 제출해 보면 즉시 🚨 적발됩니다!</p>
+              </div>
+              <button id="btn-adm-logout" class="text-xs border border-[#594F47] px-3 py-1.5 rounded-lg">🔒 로그아웃</button>
+            </div>
+
+            <div class="grid sm:grid-cols-3 gap-3 mb-4">
+              <div class="bg-white rounded-2xl border p-3.5"><div class="text-xs text-[#655B52] font-bold">전 지점 오늘 총 매출</div><div class="text-2xl font-black text-[#C93B2B] num">${php(totSales)}</div></div>
+              <div class="bg-white rounded-2xl border p-3.5"><div class="text-xs text-[#655B52] font-bold">승인 대기 취소(Void)</div><div class="text-2xl font-black num">${store.voidRequests.filter((v)=>v.status==="pending").length}건</div></div>
+              <div class="bg-white rounded-2xl border p-3.5">
+                <div class="text-xs text-[#655B52] font-bold">🇵🇭 BIR 300만 페소 VAT 한도 (${vatPct}%)</div>
+                <div class="w-full h-2.5 bg-[#F4EDE2] rounded-full overflow-hidden my-1.5"><div class="h-full bg-gradient-to-r from-[#177A52] via-[#D9822B] to-[#C93B2B]" style="width:${vatPct}%"></div></div>
+                <div class="text-[11px] text-[#655B52]">다지점 연 추정 ${php(annProj)} / ₱3,000,000</div>
+              </div>
+            </div>
+
+            ${store.voidRequests.filter((v)=>v.status==="pending").map((v) => `
+              <div class="bg-[#FEF2F2] border-2 border-[#B91C1C] rounded-2xl p-3 mb-3 flex flex-wrap justify-between items-center gap-2">
+                <div class="text-xs"><strong>🚨 취소 요청 [${esc(v.branchId)}] #${v.num} (${php(v.total)})</strong> — ${esc(v.reason)}</div>
+                <div class="flex gap-1.5">
+                  <button data-vapprove="${v.id}" class="px-3 py-1 rounded-lg bg-[#C93B2B] text-white text-xs font-bold">✅ 취소 승인</button>
+                  <button data-vreject="${v.id}" class="px-3 py-1 rounded-lg bg-white border text-xs font-bold">❌ 반려</button>
+                </div>
+              </div>`).join("")}
+
+            <div class="space-y-4">
+              ${store.branches.map((b) => {
+                const bo = store.orders.filter((o) => o.branchId === b.id && o.paid && o.status !== "voided");
+                const cashOrd = bo.filter((o) => o.pay === "cash").reduce((s, o) => s + o.total, 0);
+                const pcCash = store.punchCards.filter((p) => p.branchId === b.id && p.pay === "cash").reduce((s, p) => s + p.pkg, 0);
+                const expDrawer = b.float + cashOrd + pcCash;
+                const lastCls = store.closeouts.filter((c) => c.branchId === b.id).slice(-1)[0];
+                const cashDiff = lastCls ? lastCls.cash - expDrawer : null;
+                const soldInv = {};
+                bo.forEach((o) => o.items.forEach((it) => Object.entries(it.consumes || {}).forEach(([k, q]) => { soldInv[k] = (soldInv[k] || 0) + q * it.qty; })));
+
+                return `
+                  <div class="bg-white rounded-2xl border p-4 ${cashDiff && Math.abs(cashDiff)>=20 ? "border-2 border-[#B91C1C]" : "border-[#E5DCCF]"}">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                      <h3 class="font-extrabold text-sm">${esc(b.name)}</h3>
+                      <div class="text-xs font-bold num">예상 서랍 현금: ${php(expDrawer)} · 마감 실사: ${lastCls ? php(lastCls.cash) : "미제출"} ·
+                        ${cashDiff===null ? `<span class="text-[#655B52]">대기중</span>` : cashDiff===0 ? `<span class="text-[#177A52]">✅ 현금 일치</span>` : `<span class="text-[#B91C1C]">🚨 ${cashDiff>0?"+":""}${php(cashDiff)}</span>`}
+                      </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-xs">
+                        <thead><tr class="bg-[#F4EDE2] text-[#655B52]"><th class="p-2 text-left">1:1 품목</th><th class="p-2 text-left">출고</th><th class="p-2 text-left">판매</th><th class="p-2 text-left">예상잔여</th><th class="p-2 text-left">마감실물</th><th class="p-2 text-left">오차</th></tr></thead>
+                        <tbody>
+                          ${INV_ITEMS.map((inv) => {
+                            const open = b.alloc[inv.id] ?? inv.defaultQty;
+                            const sold = soldInv[inv.id] || 0;
+                            const exp = open - sold;
+                            const rep = lastCls ? Number(lastCls.rem[inv.id] ?? 0) : null;
+                            const diff = rep !== null ? rep - exp : null;
+                            return `<tr class="border-t"><td class="p-2 font-bold">${esc(inv.name_ko)}</td><td class="p-2 num">${open}</td><td class="p-2 num">${sold}</td><td class="p-2 num font-bold">${exp}</td><td class="p-2 num">${rep!==null?rep:"-"}</td><td class="p-2 num font-bold">${diff===null?"-":diff===0?`<span class="text-[#177A52]">0</span>`:`<span class="text-[#B91C1C]">🚨 ${diff}</span>`}</td></tr>`;
+                          }).join("")}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>`;
+              }).join("")}
+            </div>`;
+        }
+      } else if (ui.tab === "signage") {
+        app.innerHTML = `
+          <div class="no-print bg-[#27221E] text-white rounded-2xl p-3.5 mb-4 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h2 class="font-extrabold text-base">🖨️ 돈통 · 카운터 · QR 안내문 인쇄 스튜디오</h2>
+              <p class="text-xs text-[#DFD3C5]">필리핀 중앙은행(BSP) 합법 "접힌 지폐도 받습니다 — 펴서 넣어주세요" 영어·따갈로그 안내문</p>
+            </div>
+            <button id="btn-print-page" class="bg-[#C93B2B] text-white text-xs font-extrabold px-4 py-2 rounded-xl">🖨️ 인쇄하기</button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <article class="bg-white border-4 border-[#177A52] rounded-2xl p-5 space-y-3">
+              <div class="bg-[#177A52] text-white text-center font-black py-2 rounded-xl">💵 CASH PAYMENT · 투명 돈통</div>
+              <h3 class="text-xl font-black text-center">Please UNFOLD Bills Flat!</h3>
+              <p class="text-sm font-bold text-center text-[#177A52]">Folded bills ARE accepted — please just open them flat for fast checking!</p>
+              <div class="bg-[#FFF8ED] border-2 border-dashed border-[#D9822B] rounded-xl p-3 text-sm font-bold">
+                🇵🇭 Taglish:<br>“Paki-unfold / flat po ang pera bago ipakita sa staff at ilagay sa box. Salamat!”
+              </div>
+              <p class="text-[11px] text-[#655B52]">Note: Severely torn or mutilated bills cannot be accepted. (BSP 규정 준수)</p>
+            </article>
+
+            <article class="bg-white border-4 border-[#1F1B18] rounded-2xl p-5 space-y-3">
+              <div class="bg-[#1F1B18] text-white text-center font-black py-2 rounded-xl">🍢 CLEAN HANDS, FAST SERVING!</div>
+              <ol class="list-decimal pl-5 text-sm font-bold space-y-2">
+                <li>Unfold cash flat &amp; show to staff.<div class="text-xs font-normal text-[#655B52]">돈을 펴서 직원 눈앞에 보여주세요.</div></li>
+                <li>Drop into the transparent cash box.<div class="text-xs font-normal text-[#655B52]">확인 후 투명 돈통에 넣어주세요.</div></li>
+                <li>Exact amount or GCash appreciated!<div class="text-xs font-normal text-[#655B52]">딱 맞는 금액 · GCash 환영!</div></li>
+              </ol>
+              <div class="bg-[#EAF2FC] text-[#1E5EA8] text-center font-extrabold text-xs py-2 rounded-xl">📱 GCash: ${esc(br.gcash)}</div>
+            </article>
+
+            <article class="bg-white border-4 border-[#C93B2B] rounded-2xl p-5 text-center space-y-3">
+              <div class="bg-[#C93B2B] text-white font-black py-2 rounded-xl">🚨 OFFICIAL STORE POLICY</div>
+              <div class="text-xl font-black text-[#C93B2B]">IF YOU DON'T RECEIVE AN ORDER NUMBER / SLIP, YOUR MEAL IS FREE!</div>
+              <p class="text-sm font-bold">“Kapag walang Order Number o Slip, LIBRE ang pagkain mo!”</p>
+              <p class="text-[11px] text-[#655B52]">Internal Order Slip Only — Not an Official BIR Sales Invoice</p>
+            </article>
+
+            <article class="bg-white border-4 border-[#1F1B18] rounded-2xl p-5 space-y-3">
+              <div class="bg-[#1F1B18] text-white text-center font-black py-2 rounded-xl">📱 SKIP THE LINE! SCAN TO ORDER</div>
+              <div class="flex justify-around items-center">
+                <div class="text-center">${QR.svg(`https://seoulbites.ph/?mode=kiosk&branchId=${br.id}&table=LINE-QR`, 124)}<div class="text-xs font-extrabold mt-1">줄 맨 뒤 사전주문 QR</div></div>
+                <div class="text-center">${QR.svg(`https://seoulbites.ph/?mode=kiosk&branchId=${br.id}&table=Table-1`, 124)}<div class="text-xs font-extrabold mt-1">테이블 T1 QR</div></div>
+              </div>
+            </article>
+          </div>`;
+      }
+
+      bindAppEvents();
+    }
+
+    function createOrder(mode, pay, extra = {}) {
+      const total = ui.cart.reduce((s, c) => s + c.price * c.qty, 0);
+      if (total <= 0) return;
+      let paid = mode === "pos";
+      let status = mode === "pos" ? (ui.instant ? "completed" : "preparing") : "waiting_payment";
+      if (pay === "punch_card") {
+        const card = store.punchCards.find((p) => p.code === extra.code);
+        const need = Math.ceil(total / 50);
+        if (!card || card.left < need) return toast(`식권 횟수가 부족합니다 (필요 ${need}칸)`, false);
+        card.left -= need;
+        paid = true;
+      }
+      const ord = {
+        id: "o_" + Math.random().toString(36).slice(2, 9),
+        num: nextOrderNum(ui.branchId),
+        branchId: ui.branchId,
+        mode,
+        table: mode === "pos" ? "Counter" : "Kiosk",
+        items: ui.cart.map((c) => ({ ...c })),
+        total,
+        pay,
+        paid,
+        status,
+        ts: Date.now(),
+      };
+      store.orders.push(ord);
+      saveStore();
+      ui.cart = [];
+      ui.tender = 0;
+      ui.lastOrder = ord;
+      render();
+      toast(`주문 #${ord.num} (${php(ord.total)}) 등록 완료!`);
+      return ord;
+    }
+
+    function showSlipModal(ord) {
+      openModal(`
+        <div class="flex justify-between items-center mb-3"><strong class="text-sm">🖨️ 58mm 주문표 (BIR 안내 포함)</strong><button id="m-close" class="text-xs px-2 py-1 bg-[#F4EDE2] rounded-lg font-bold">닫기</button></div>
+        <div class="receipt-58">
+          <div style="text-align:center;border-bottom:1px dashed #000;padding-bottom:6px;margin-bottom:6px;">
+            <strong>ORDER SLIP ONLY</strong><br><small>NOT AN OFFICIAL BIR INVOICE</small><br>
+            <div style="font-size:18px;font-weight:900;margin:4px 0;">#${ord.num}</div>
+          </div>
+          ${ord.items.map((i) => `<div style="display:flex;justify-content:space-between;"><span>${esc(i.en)} x${i.qty}</span><span>${php(i.price*i.qty)}</span></div>`).join("")}
+          <div style="border-top:1px dashed #000;margin-top:6px;padding-top:6px;font-weight:900;display:flex;justify-content:space-between;">
+            <span>TOTAL (${ord.pay.toUpperCase()})</span><span>${php(ord.total)}</span>
+          </div>
+          ${ord.total>=500 ? `<div style="border:1px solid #000;padding:3px;margin-top:6px;font-size:10px;text-align:center;">BIR ₱500+ : Issue manual Sales Invoice if requested</div>` : ""}
+        </div>`);
+      document.getElementById("m-close").addEventListener("click", closeModal);
+    }
+
+    function bindAppEvents() {
+      document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { ui.tab = b.dataset.tab; render(); }));
+      document.querySelectorAll("[data-pfilter]").forEach((b) => b.addEventListener("click", () => { ui.posFilter = b.dataset.pfilter; render(); }));
+      document.querySelectorAll("[data-kfilter]").forEach((b) => b.addEventListener("click", () => { ui.kioskFilter = b.dataset.kfilter; render(); }));
+      document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => { ui.lang = b.dataset.lang; render(); }));
+      document.querySelectorAll("[data-tender]").forEach((b) => b.addEventListener("click", () => { ui.tender = Number(b.dataset.tender); render(); }));
+      document.querySelectorAll("[data-padd]").forEach((b) => b.addEventListener("click", () => { const m = MENU.find((x)=>x.id===b.dataset.padd); if (m) addCart(m); }));
+      document.querySelectorAll("[data-kadd]").forEach((b) => b.addEventListener("click", () => {
+        const m = MENU.find((x) => x.id === b.dataset.kadd);
+        if (!m) return;
+        if (!m.opts || m.quick) return addCart(m);
+        openModal(`
+          <div class="flex justify-between items-center mb-2"><strong>${esc(m.ko)} · ${esc(m.en)}</strong><button id="m-close" class="text-xs px-2 py-1 bg-[#F4EDE2] rounded-lg">✕</button></div>
+          <div class="h-32 rounded-xl overflow-hidden mb-3">${visualHtml(m)}</div>
+          <div class="space-y-1.5">${m.opts.map((o) => `<button data-pickopt="${o.id}" class="w-full py-2 px-3 rounded-xl border text-left text-xs font-bold flex justify-between hover:border-[#C93B2B]"><span>${esc(o.lbl)}</span><span class="num">${php(m.price+o.p)}</span></button>`).join("")}</div>`);
+        document.getElementById("m-close").addEventListener("click", closeModal);
+        document.querySelectorAll("[data-pickopt]").forEach((ob) => ob.addEventListener("click", () => {
+          const opt = m.opts.find((x) => x.id === ob.dataset.pickopt);
+          closeModal();
+          addCart(m, opt);
+        }));
+      }));
+      document.querySelectorAll("[data-qminus]").forEach((b) => b.addEventListener("click", () => {
+        const c = ui.cart.find((x) => x.key === b.dataset.qminus);
+        if (c) { c.qty -= 1; if (c.qty <= 0) ui.cart = ui.cart.filter((x) => x.key !== b.dataset.qminus); render(); }
+      }));
+      document.querySelectorAll("[data-qplus]").forEach((b) => b.addEventListener("click", () => {
+        const c = ui.cart.find((x) => x.key === b.dataset.qplus);
+        if (c) { c.qty += 1; render(); }
+      }));
+      document.querySelectorAll("[data-slip]").forEach((b) => b.addEventListener("click", () => {
+        const o = store.orders.find((x) => x.id === b.dataset.slip);
+        if (o) showSlipModal(o);
+      }));
+      document.querySelectorAll("[data-void]").forEach((b) => b.addEventListener("click", () => {
+        const o = store.orders.find((x) => x.id === b.dataset.void);
+        if (!o) return;
+        o.voidReq = true;
+        store.voidRequests.push({ id: "vr_" + Math.random().toString(36).slice(2,7), orderId: o.id, branchId: o.branchId, num: o.num, total: o.total, reason: "직원 오입력/미수령 취소요청", status: "pending" });
+        saveStore(); render(); toast("사장님 대시보드(PIN)로 취소 승인 요청이 전송되었습니다!");
+      }));
+      document.querySelectorAll("[data-kpay]").forEach((b) => b.addEventListener("click", () => {
+        const o = store.orders.find((x) => x.id === b.dataset.kpay);
+        if (o) { o.paid = true; o.pay = b.dataset.pm; o.status = "preparing"; saveStore(); render(); toast(`#${o.num} 결제확인 → 조리 시작!`); }
+      }));
+      document.querySelectorAll("[data-knext]").forEach((b) => b.addEventListener("click", () => {
+        const o = store.orders.find((x) => x.id === b.dataset.knext);
+        if (o) { o.status = b.dataset.st; saveStore(); render(); }
+      }));
+
+      const el = (id) => document.getElementById(id);
+      if (el("btn-clear-cart")) el("btn-clear-cart").addEventListener("click", () => { ui.cart = []; ui.tender = 0; render(); });
+      if (el("chk-inst")) el("chk-inst").addEventListener("change", (e) => { ui.instant = e.target.checked; });
+      if (el("pos-cash")) el("pos-cash").addEventListener("click", () => createOrder("pos", "cash"));
+      if (el("pos-gcash")) el("pos-gcash").addEventListener("click", () => createOrder("pos", "gcash"));
+      if (el("pos-card")) el("pos-card").addEventListener("click", () => createOrder("pos", "card"));
+      if (el("pos-punch")) el("pos-punch").addEventListener("click", () => {
+        const cards = store.punchCards.filter((p) => p.branchId === ui.branchId);
+        openModal(`
+          <h3 class="font-extrabold mb-2">🎫 단골 식권 선택</h3>
+          ${cards.map((p) => `<button data-usepc="${p.code}" class="w-full py-2 px-3 rounded-xl border mb-1.5 flex justify-between text-xs font-bold"><span>${esc(p.code)} (${esc(p.student)})</span><span>${p.left}/${p.total}칸</span></button>`).join("")}
+          <button id="m-close" class="w-full py-2 rounded-xl bg-[#F4EDE2] text-xs font-bold mt-2">취소</button>`);
+        el("m-close").addEventListener("click", closeModal);
+        document.querySelectorAll("[data-usepc]").forEach((pb) => pb.addEventListener("click", () => { closeModal(); createOrder("pos", "punch_card", { code: pb.dataset.usepc }); }));
+      });
+      if (el("btn-pc-modal")) el("btn-pc-modal").addEventListener("click", () => {
+        openModal(`
+          <h3 class="font-extrabold mb-2">🎫 단골 식권 발급 (₱200 = 4칸 / ₱500 = 10칸)</h3>
+          <input id="new-pc-name" class="w-full border rounded-xl px-3 py-2 text-sm mb-2" placeholder="학생 이름 (예: Ana G9)" />
+          <select id="new-pc-pkg" class="w-full border rounded-xl px-3 py-2 text-sm mb-3"><option value="200">₱200 (4칸 · 현금선결제)</option><option value="500">₱500 (10칸 · 현금선결제)</option></select>
+          <button id="btn-save-pc" class="w-full py-2.5 rounded-xl bg-[#D9822B] text-white font-extrabold text-sm">식권 발급하기</button>`);
+        el("btn-save-pc").addEventListener("click", () => {
+          const st = el("new-pc-name").value.trim() || "Student";
+          const pkg = Number(el("new-pc-pkg").value);
+          const code = "PC-" + (101 + store.punchCards.length);
+          store.punchCards.push({ code, branchId: ui.branchId, student: st, pkg, total: pkg/50, left: pkg/50, pay: "cash" });
+          saveStore(); closeModal(); render(); toast(`식권 ${code} 발급 완료!`);
+        });
+      });
+
+      if (el("btn-kiosk-new")) el("btn-kiosk-new").addEventListener("click", () => { ui.lastOrder = null; render(); });
+      if (el("kiosk-cash")) el("kiosk-cash").addEventListener("click", () => createOrder("kiosk", "cash"));
+      if (el("kiosk-card")) el("kiosk-card").addEventListener("click", () => createOrder("kiosk", "card"));
+      if (el("kiosk-gcash")) el("kiosk-gcash").addEventListener("click", () => {
+        const ord = createOrder("kiosk", "gcash");
+        if (!ord) return;
+        openModal(`
+          <div class="text-center space-y-3">
+            <span class="text-xs font-extrabold bg-[#EAF2FC] text-[#1E5EA8] px-3 py-1 rounded-full">PayMongo Dynamic QR Ph</span>
+            <h3 class="text-lg font-black">주문 #${ord.num} · ${php(ord.total)}</h3>
+            <div class="inline-block p-3 bg-[#F4EDE2] rounded-2xl">${QR.svg(`PH.PAYMONGO.QRPH|${ord.id}|${ord.total}`, 180)}</div>
+            <button id="sim-pm-ok" class="w-full py-3 rounded-xl bg-[#177A52] text-white font-extrabold text-xs">⚡ PayMongo 자동입금 시뮬레이션 (직원확인 없이 바로 주방전송!)</button>
+            <button id="m-close" class="w-full py-2 rounded-xl bg-[#F4EDE2] text-xs font-bold">닫기</button>
+          </div>`);
+        el("m-close").addEventListener("click", closeModal);
+        el("sim-pm-ok").addEventListener("click", () => {
+          ord.paid = true; ord.status = "preparing"; saveStore(); closeModal(); render(); toast(`#${ord.num} 동적 QR 입금 확인 → 주방 자동 전송!`);
+        });
+      });
+
+      document.querySelectorAll(".cls-den").forEach((inp) => inp.addEventListener("input", () => {
+        let sum = 0;
+        document.querySelectorAll(".cls-den").forEach((d) => { sum += Number(d.dataset.cden) * Math.max(0, Number(d.value || 0)); });
+        el("cls-total").textContent = php(sum);
+      }));
+      if (el("btn-cls-submit")) el("btn-cls-submit").addEventListener("click", () => {
+        let cash = 0;
+        document.querySelectorAll(".cls-den").forEach((d) => { cash += Number(d.dataset.cden) * Math.max(0, Number(d.value || 0)); });
+        const rem = {};
+        document.querySelectorAll(".cls-rem").forEach((r) => { rem[r.dataset.crem] = Number(r.value || 0); });
+        store.closeouts.push({ branchId: ui.branchId, staff: el("cls-staff").value || "Staff", cash, rem, ts: Date.now() });
+        saveStore();
+        toast("블라인드 마감 제출 완료! (차액은 📊 사장님 감시 탭에서 적발 확인)");
+      });
+
+      if (el("btn-adm-login")) el("btn-adm-login").addEventListener("click", () => {
+        if (el("adm-pin").value === store.pin) { ui.adminUnlocked = true; render(); }
+        else toast("PIN 번호가 틀렸습니다 (초기값: 7777)", false);
+      });
+      if (el("btn-adm-logout")) el("btn-adm-logout").addEventListener("click", () => { ui.adminUnlocked = false; render(); });
+      document.querySelectorAll("[data-vapprove]").forEach((b) => b.addEventListener("click", () => {
+        const vr = store.voidRequests.find((v) => v.id === b.dataset.vapprove);
+        if (vr) { vr.status = "approved"; const o = store.orders.find((x)=>x.id===vr.orderId); if (o) o.status = "voided"; saveStore(); render(); toast("취소 승인 완료"); }
+      }));
+      document.querySelectorAll("[data-vreject]").forEach((b) => b.addEventListener("click", () => {
+        const vr = store.voidRequests.find((v) => v.id === b.dataset.vreject);
+        if (vr) { vr.status = "rejected"; const o = store.orders.find((x)=>x.id===vr.orderId); if (o) o.voidReq = false; saveStore(); render(); toast("취소 반려 (매출 유지)"); }
+      }));
+      if (el("btn-print-page")) el("btn-print-page").addEventListener("click", () => window.print());
+    }
+
+    document.getElementById("branch-select").addEventListener("change", (e) => {
+      ui.branchId = e.target.value;
+      const b = activeBranch();
+      if (["pos","kiosk"].includes(ui.tab)) ui.tab = b.mode;
+      render();
+    });
+    document.getElementById("btn-lock-kiosk").addEventListener("click", () => { ui.locked = true; render(); });
+    document.getElementById("btn-unlock-kiosk").addEventListener("click", () => {
+      openModal(`
+        <h3 class="font-extrabold mb-2">🔓 화면 잠금 해제 (PIN: 7777)</h3>
+        <input id="unl-pin" type="password" value="7777" class="w-full border rounded-xl px-3 py-2 text-center text-xl num mb-3" />
+        <button id="btn-do-unl" class="w-full py-2.5 rounded-xl bg-[#C93B2B] text-white font-bold">해제</button>`);
+      document.getElementById("btn-do-unl").addEventListener("click", () => {
+        if (document.getElementById("unl-pin").value === store.pin) { ui.locked = false; closeModal(); render(); }
+        else toast("PIN 오류", false);
+      });
+    });
+    document.getElementById("btn-reset-demo").addEventListener("click", () => {
+      store = defaultStore(); saveStore(); ui.cart = []; ui.lastOrder = null; render(); toast("데모 데이터 초기화 완료!");
+    });
+
+    render();
+  })();
+  </script>
+</body>
+</html>
