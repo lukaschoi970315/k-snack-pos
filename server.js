@@ -270,7 +270,7 @@ function ensureDailyAllocations(branchId, businessDate) {
 
 function seedDatabase() {
   ensureSetting("owner_pin_hash", hashPin("7777"));
-  ensureSetting("shop_name", "SEOUL BITES PH · 오뎅 & 컵밥");
+  ensureSetting("shop_name", "HM Snacks");
   ensureSetting("telegram_bot_token", "");
   ensureSetting("telegram_chat_id", "");
   ensureSetting("paymongo_mode", "manual_qr"); // 'manual_qr' | 'paymongo_dynamic'
@@ -278,7 +278,7 @@ function seedDatabase() {
   ensureSetting("paymongo_webhook_secret", "");
   ensureSetting("bir_tin", "123-456-789-000");
   ensureSetting("bir_vat_threshold", "3000000");
-  ensureSetting("signage_gcash_name", "SEOUL BITES PH");
+  ensureSetting("signage_gcash_name", "HM Snacks");
   ensureSetting("signage_gcash_number", "0917-000-8899");
 
   const branchCount = db.prepare("SELECT COUNT(*) AS cnt FROM branches").get().cnt;
@@ -288,9 +288,9 @@ function seedDatabase() {
       INSERT INTO branches (id, name, type, default_mode, opening_float, gcash_number, qr_image_url, is_active, sort_order, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
     `);
-    insertBranch.run("school-a", "1호점 · A학교 칸틴 앞 (School A)", "school_stall", "pos", 2500, "0917-101-7777", "", 1, now);
-    insertBranch.run("school-b", "2호점 · B학교 정문 부스 (School B)", "school_stall", "pos", 2500, "0917-202-7777", "", 2, now);
-    insertBranch.run("univ-main", "3호점 · 대학가 로드샵 (Univ Shop)", "shop_kiosk", "kiosk", 3000, "0917-303-7777", "", 3, now);
+    insertBranch.run("school-a", "1호점 · 학교 칸틴 앞 (Branch 1)", "school_stall", "pos", 2500, "0917-101-7777", "", 1, now);
+    insertBranch.run("school-b", "2호점 · 학교 정문 부스 (Branch 2)", "school_stall", "pos", 2500, "0917-202-7777", "", 2, now);
+    insertBranch.run("univ-main", "3호점 · 로드샵 키오스크 (Branch 3)", "shop_kiosk", "kiosk", 3000, "0917-303-7777", "", 3, now);
   }
 
   const invCount = db.prepare("SELECT COUNT(*) AS cnt FROM inventory_items").get().cnt;
@@ -306,270 +306,9 @@ function seedDatabase() {
     insertInv.run("can_drink", "음료 캔/병", "Drink Cans/Bottles", "캔", 100, 5);
   }
 
-  const menuCount = db.prepare("SELECT COUNT(*) AS cnt FROM menu_items").get().cnt;
-  if (menuCount === 0) {
-    const insertMenu = db.prepare(`
-      INSERT INTO menu_items
-        (id, category, name_ko, name_en, name_tl, description_en, price, image_url, is_quick_combo, options_json, consumes_json, is_available, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-    `);
-
-    const items = [
-      // ₱50-Step Quick Combos (Zero popup, 5-sec checkout!)
-      [
-        "combo_eomuk2", "combo", "오뎅 2꼬치 + 따뜻한 국물", "Eomuk 2 Skewers + Hot Broth",
-        "2 Fishcake Sticks + Sabaw", "₱50 exact! Zero change needed.",
-        50, "/images/eomuk.jpg", 1,
-        [], [{ inventory_item_id: "skewer_eomuk", qty: 2 }], 1
-      ],
-      [
-        "combo_eomuk_tea", "combo", "오뎅 2꼬치 + 아이스티 세트", "Eomuk 2pcs + Iced Tea",
-        "2 Eomuk + Malamig na Iced Tea", "Fast ₱100 recess combo",
-        100, "svg:combo", 1,
-        [], [{ inventory_item_id: "skewer_eomuk", qty: 2 }, { inventory_item_id: "can_drink", qty: 1 }], 2
-      ],
-      [
-        "combo_spam_cupbap", "combo", "스팸김치 컵밥 (단품)", "Spam Kimchi Cupbap",
-        "Spam Kimchi Rice Bowl", "Pre-packed warm cupbap — ₱100 exact",
-        100, "svg:cupbap_spam", 1,
-        [], [{ inventory_item_id: "bowl_cupbap", qty: 1 }], 3
-      ],
-      [
-        "combo_chicken_set", "combo", "치킨마요 컵밥 + 음료 세트", "Chicken Mayo Cupbap + Drink",
-        "Chicken Mayo Bowl + Drink", "Best seller ₱150 set",
-        150, "svg:cupbap_chicken", 1,
-        [], [{ inventory_item_id: "bowl_cupbap", qty: 1 }, { inventory_item_id: "can_drink", qty: 1 }], 4
-      ],
-      [
-        "combo_tteok_eomuk", "combo", "컵 떡볶이 + 오뎅 1꼬치", "Cup Tteokbokki + 1 Eomuk",
-        "Tteokbokki + 1 Eomuk Stick", "Sweet-spicy snack combo ₱150",
-        150, "svg:tteokbokki", 1,
-        [], [{ inventory_item_id: "cup_tteok", qty: 1 }, { inventory_item_id: "skewer_eomuk", qty: 1 }], 5
-      ],
-      [
-        "combo_full_set", "combo", "K-분식 풀세트 (컵밥+떡볶이+음료)", "Full K-Snack Set",
-        "Cupbap + Tteokbokki + Drink", "Complete meal ₱200 exact",
-        200, "svg:combo", 1,
-        [], [{ inventory_item_id: "bowl_cupbap", qty: 1 }, { inventory_item_id: "cup_tteok", qty: 1 }, { inventory_item_id: "can_drink", qty: 1 }], 6
-      ],
-
-      // Eomuk
-      [
-        "eomuk_1", "eomuk", "부산 오뎅 1꼬치", "Busan Eomuk Skewer (1pc)",
-        "1 Stick Fishcake + Broth", "Warm dashi broth in cup",
-        30, "/images/eomuk.jpg", 0,
-        [
-          {
-            id: "broth", label_ko: "국물 맛", label_en: "Broth Style", required: false,
-            choices: [
-              { id: "mild", label_ko: "순한 국물", label_en: "Original Mild", priceDelta: 0 },
-              { id: "spicy", label_ko: "매운 국물", label_en: "Spicy Broth", priceDelta: 0 }
-            ]
-          },
-          {
-            id: "extra", label_ko: "꼬치 추가", label_en: "Add Extra", required: false,
-            choices: [
-              { id: "none", label_ko: "추가 없음", label_en: "No Extra", priceDelta: 0 },
-              { id: "add_cheese", label_ko: "치즈 토핑 (+₱20)", label_en: "Cheese Topping (+₱20)", priceDelta: 20 }
-            ]
-          }
-        ],
-        [{ inventory_item_id: "skewer_eomuk", qty: 1 }], 7
-      ],
-      [
-        "eomuk_3", "eomuk", "오뎅 3꼬치 패밀리 컵", "Eomuk 3-Skewer Cup",
-        "3 Sticks Fishcake Cup", "3 skewers + rich scallions broth",
-        100, "/images/eomuk.jpg", 0,
-        [
-          {
-            id: "broth", label_ko: "국물 맛", label_en: "Broth Style", required: false,
-            choices: [
-              { id: "mild", label_ko: "순한 국물", label_en: "Original Mild", priceDelta: 0 },
-              { id: "spicy", label_ko: "매운 국물", label_en: "Spicy Broth", priceDelta: 0 }
-            ]
-          }
-        ],
-        [{ inventory_item_id: "skewer_eomuk", qty: 3 }], 8
-      ],
-
-      // Cupbap
-      [
-        "cupbap_chicken", "cupbap", "치킨마요 컵밥", "Chicken Mayo Cupbap",
-        "Crispy Chicken Mayo Rice", "Crispy chicken, scrambled egg, teriyaki & mayo",
-        120, "svg:cupbap_chicken", 0,
-        [
-          {
-            id: "topping", label_ko: "토핑 추가", label_en: "Extra Topping", required: false,
-            choices: [
-              { id: "base", label_ko: "기본", label_en: "Standard", priceDelta: 0 },
-              { id: "egg", label_ko: "계란 후라이 (+₱20)", label_en: "Fried Egg (+₱20)", priceDelta: 20 },
-              { id: "cheese", label_ko: "치즈 추가 (+₱30)", label_en: "Melted Cheese (+₱30)", priceDelta: 30 }
-            ]
-          }
-        ],
-        [{ inventory_item_id: "bowl_cupbap", qty: 1 }], 9
-      ],
-      [
-        "cupbap_bulgogi", "cupbap", "소불고기 컵밥", "Beef Bulgogi Cupbap",
-        "Sweet Savory Beef Rice", "Marinated Korean beef, egg, nori & sesame rice",
-        150, "svg:cupbap_chicken", 0,
-        [
-          {
-            id: "topping", label_ko: "토핑 추가", label_en: "Extra Topping", required: false,
-            choices: [
-              { id: "base", label_ko: "기본", label_en: "Standard", priceDelta: 0 },
-              { id: "egg", label_ko: "계란 추가 (+₱20)", label_en: "Fried Egg (+₱20)", priceDelta: 20 }
-            ]
-          }
-        ],
-        [{ inventory_item_id: "bowl_cupbap", qty: 1 }], 10
-      ],
-
-      // Ramyun (12:00 Lunch / Dismissal special)
-      [
-        "ramyun_egg", "ramyun", "한국 계란 라면", "Korean Egg Ramyun",
-        "Hot Noodle Soup w/ Egg", "Lunch/Dismissal favorite — 1 min hot broth",
-        120, "svg:ramyun", 0,
-        [
-          {
-            id: "spice", label_ko: "맵기 선택", label_en: "Spice Level", required: false,
-            choices: [
-              { id: "mild", label_ko: "순한맛", label_en: "Mild", priceDelta: 0 },
-              { id: "orig", label_ko: "신라면 매운맛", label_en: "Original Spicy", priceDelta: 0 },
-              { id: "cheese", label_ko: "치즈 추가 (+₱30)", label_en: "Add Cheese (+₱30)", priceDelta: 30 }
-            ]
-          }
-        ],
-        [{ inventory_item_id: "bowl_ramyun", qty: 1 }], 11
-      ],
-      [
-        "ramyun_cheese", "ramyun", "치즈 불닭 라면", "Cheese Buldak Ramyun",
-        "Cheesy Spicy Korean Noodles", "Rich cheddar & mozzarella Korean noodles",
-        150, "svg:ramyun", 0,
-        [], [{ inventory_item_id: "bowl_ramyun", qty: 1 }], 12
-      ],
-
-      // Tteokbokki
-      [
-        "tteok_cup", "tteokbokki", "컵 떡볶이", "Cup Tteokbokki",
-        "Chewy Korean Rice Cakes", "Sweet & spicy gochujang glaze",
-        100, "svg:tteokbokki", 0,
-        [
-          {
-            id: "spice", label_ko: "맵기/토핑", label_en: "Style", required: false,
-            choices: [
-              { id: "sweet", label_ko: "달콤 순한맛", label_en: "Sweet Mild", priceDelta: 0 },
-              { id: "spicy", label_ko: "매운맛", label_en: "Street Spicy", priceDelta: 0 },
-              { id: "mozz", label_ko: "모짜렐라 (+₱30)", label_en: "Mozzarella (+₱30)", priceDelta: 30 }
-            ]
-          }
-        ],
-        [{ inventory_item_id: "cup_tteok", qty: 1 }], 13
-      ],
-
-      // Drinks
-      [
-        "drink_iced_tea", "drink", "아이스티 / 한국 캔음료", "Iced Tea / Korean Can",
-        "Malamig na Drinks", "Zero-coin ₱50 drink",
-        50, "svg:drinks", 1,
-        [], [{ inventory_item_id: "can_drink", qty: 1 }], 14
-      ],
-      [
-        "drink_water", "drink", "시원한 생수 (500ml)", "Bottled Water (500ml)",
-        "Cold Mineral Water", "Refreshing cold mineral water",
-        30, "svg:drinks", 0,
-        [], [{ inventory_item_id: "can_drink", qty: 1 }], 15
-      ]
-    ];
-
-    for (const row of items) {
-      insertMenu.run(
-        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8],
-        JSON.stringify(row[9]), JSON.stringify(row[10]), row[11]
-      );
-    }
-  }
-
   const today = getManilaDate();
   const branches = db.prepare("SELECT id FROM branches").all();
   for (const b of branches) ensureDailyAllocations(b.id, today);
-
-  // Seed realistic sample data if DB has zero orders (can be wiped anytime via Admin -> Reset Day)
-  const orderCount = db.prepare("SELECT COUNT(*) AS cnt FROM orders").get().cnt;
-  if (orderCount === 0 && !process.env.NO_SAMPLE_SEED) {
-    seedSampleDay(today);
-  }
-}
-
-function seedSampleDay(today) {
-  const createSeededOrder = (branchId, sourceMode, tableLabel, itemIds, paymentMethod, paymentStatus, orderStatus, minsAgo) => {
-    const items = [];
-    let total = 0;
-    const consumptions = [];
-    for (const id of itemIds) {
-      const m = db.prepare("SELECT * FROM menu_items WHERE id = ?").get(id);
-      if (!m) continue;
-      items.push({
-        menuItemId: m.id,
-        name_ko: m.name_ko,
-        name_en: m.name_en,
-        qty: 1,
-        unitPrice: m.price,
-        lineTotal: m.price,
-        optionsLabel: "",
-        consumes: parseJsonSafe(m.consumes_json, [])
-      });
-      total += m.price;
-      for (const c of parseJsonSafe(m.consumes_json, [])) {
-        consumptions.push({ inventory_item_id: c.inventory_item_id, qty: c.qty });
-      }
-    }
-    const maxNum = db.prepare("SELECT COALESCE(MAX(order_number), 100) AS m FROM orders WHERE branch_id = ? AND business_date = ?").get(branchId, today).m;
-    const orderNum = maxNum + 1;
-    const orderId = `ord_${crypto.randomUUID().slice(0, 8)}`;
-    const ts = new Date(Date.now() - minsAgo * 60_000).toISOString();
-    const paidAt = paymentStatus === "paid" ? ts : null;
-    const compAt = orderStatus === "completed" ? ts : null;
-
-    db.prepare(`
-      INSERT INTO orders
-        (id, order_number, branch_id, business_date, source_mode, table_label, items_json, total_amount,
-         payment_method, payment_status, order_status, cash_received, change_given, bir_si_required, created_at, paid_at, completed_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      orderId, orderNum, branchId, today, sourceMode, tableLabel, JSON.stringify(items), total,
-      paymentMethod, paymentStatus, orderStatus,
-      paymentMethod === "cash" ? total : null, paymentMethod === "cash" ? 0 : null,
-      total >= 500 ? 1 : 0, ts, paidAt, compAt
-    );
-
-    if (paymentStatus === "paid") {
-      const insC = db.prepare("INSERT INTO order_consumptions (order_id, branch_id, business_date, inventory_item_id, qty, is_voided) VALUES (?, ?, ?, ?, ?, 0)");
-      for (const c of consumptions) insC.run(orderId, branchId, today, c.inventory_item_id, c.qty);
-    }
-  };
-
-  // School A (Recess Rush POS samples)
-  createSeededOrder("school-a", "pos", "Counter", ["combo_eomuk2", "combo_chicken_set"], "cash", "paid", "completed", 45);
-  createSeededOrder("school-a", "pos", "Counter", ["combo_spam_cupbap", "drink_iced_tea"], "cash", "paid", "completed", 38);
-  createSeededOrder("school-a", "pos", "Counter", ["combo_full_set"], "gcash", "paid", "completed", 25);
-  createSeededOrder("school-a", "pos", "Counter", ["combo_tteok_eomuk"], "cash", "paid", "preparing", 4);
-
-  // School B (1 suspicious discrepancy demo closeout so owner immediately sees the theft-detection UI!)
-  createSeededOrder("school-b", "pos", "Counter", ["combo_eomuk_tea"], "cash", "paid", "completed", 55);
-  createSeededOrder("school-b", "pos", "Counter", ["combo_chicken_set"], "cash", "paid", "completed", 50);
-
-  // Univ Shop (Self Kiosk + Table QR samples)
-  createSeededOrder("univ-main", "kiosk", "Counter", ["ramyun_cheese", "drink_iced_tea"], "gcash", "paid", "ready", 8);
-  createSeededOrder("univ-main", "table_qr", "Table T3", ["cupbap_bulgogi", "tteok_cup"], "cash", "unpaid", "waiting_payment", 2);
-
-  // Sample Punch Card on School A
-  db.prepare(`
-    INSERT OR IGNORE INTO punch_cards (id, code, branch_id, business_date, student_name, package_price, total_punches, remaining_punches, payment_method, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run("pc_demo1", "PC-101", "school-a", today, "Marco (Grade 10)", 200, 4, 3, "cash", getManilaTimestamp());
-
-  logAudit("school-a", "DEMO_SEEDED", "system", "초기 다지점 데모 데이터 로드 완료", { businessDate: today });
 }
 
 seedDatabase();
@@ -897,10 +636,10 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, {
         ok: true,
         businessDate: getManilaDate(),
-        shopName: getSetting("shop_name", "SEOUL BITES PH"),
+        shopName: getSetting("shop_name", "HM Snacks"),
         paymongoMode: getSetting("paymongo_mode", "manual_qr"),
         paymongoConfigured: Boolean(getSetting("paymongo_secret_key", "").trim()),
-        signageGcashName: getSetting("signage_gcash_name", "SEOUL BITES PH"),
+        signageGcashName: getSetting("signage_gcash_name", "HM Snacks"),
         signageGcashNumber: getSetting("signage_gcash_number", "0917-000-8899"),
         branches,
         inventoryItems,
@@ -1541,14 +1280,14 @@ const server = http.createServer(async (req, res) => {
           auditLogs,
           orders: orders.map(formatOrderForClient),
           settings: {
-            shopName: getSetting("shop_name", "SEOUL BITES PH"),
+            shopName: getSetting("shop_name", "HM Snacks"),
             paymongoMode: getSetting("paymongo_mode", "manual_qr"),
             paymongoSecretKeyMasked: getSetting("paymongo_secret_key", "") ? "sk_****configured" : "",
             paymongoWebhookSecretMasked: getSetting("paymongo_webhook_secret", "") ? "whsec_****configured" : "",
             telegramConfigured: Boolean(getSetting("telegram_bot_token", "") && getSetting("telegram_chat_id", "")),
             telegramChatId: getSetting("telegram_chat_id", ""),
             birTin: getSetting("bir_tin", "123-456-789-000"),
-            signageGcashName: getSetting("signage_gcash_name", "SEOUL BITES PH"),
+            signageGcashName: getSetting("signage_gcash_name", "HM Snacks"),
             signageGcashNumber: getSetting("signage_gcash_number", "0917-000-8899"),
           },
         });
@@ -1703,9 +1442,17 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { ok: true, id });
       }
 
+      const deleteMenuMatch = pathname.match(/^\/api\/admin\/menu\/([^/]+)$/);
+      if (req.method === "DELETE" && deleteMenuMatch) {
+        const id = decodeURIComponent(deleteMenuMatch[1]);
+        db.prepare("DELETE FROM menu_items WHERE id = ?").run(id);
+        logAudit("all", "MENU_DELETED", "owner", `메뉴 삭제: ${id}`, { id });
+        return sendJson(res, 200, { ok: true, id });
+      }
+
       // Admin Settings Update (PIN, Telegram, PayMongo, BIR, Signage)
       if (req.method === "POST" && pathname === "/api/admin/settings") {
-        if (body.shopName !== undefined) setSetting("shop_name", String(body.shopName).trim() || "SEOUL BITES PH");
+        if (body.shopName !== undefined) setSetting("shop_name", String(body.shopName).trim() || "HM Snacks");
         if (body.paymongoMode !== undefined) {
           setSetting("paymongo_mode", body.paymongoMode === "paymongo_dynamic" ? "paymongo_dynamic" : "manual_qr");
         }
@@ -1730,10 +1477,10 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { ok: true });
       }
 
-      // Demo Reset / Clean Day Start
+      // Clean Day / Data Reset
       if (req.method === "POST" && pathname === "/api/admin/demo-reset") {
-        const mode = body.mode === "seed" ? "seed" : "clean";
         const today = getManilaDate();
+        const wipeMenus = Boolean(body.wipeMenus);
         db.exec("BEGIN");
         try {
           db.prepare("DELETE FROM void_requests").run();
@@ -1741,15 +1488,15 @@ const server = http.createServer(async (req, res) => {
           db.prepare("DELETE FROM orders").run();
           db.prepare("DELETE FROM blind_closeouts").run();
           db.prepare("DELETE FROM punch_cards").run();
-          if (mode === "seed") seedSampleDay(today);
-          else logAudit("all", "DAY_RESET", "owner", "실제 영업을 위해 오늘 테스트 데이터 초기화", { today });
+          if (wipeMenus) db.prepare("DELETE FROM menu_items").run();
+          logAudit("all", "DAY_RESET", "owner", wipeMenus ? "전체 데이터 및 메뉴 초기화" : "오늘 매출·주문·마감 기록 초기화", { today, wipeMenus });
           db.exec("COMMIT");
         } catch (err) {
           db.exec("ROLLBACK");
           throw err;
         }
         broadcastEvent("order_updated", { branchId: "all", reset: true });
-        return sendJson(res, 200, { ok: true, mode });
+        return sendJson(res, 200, { ok: true });
       }
 
       // Export CSV (UTF-8 BOM for Excel)

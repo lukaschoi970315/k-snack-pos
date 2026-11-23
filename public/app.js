@@ -1,4 +1,4 @@
-/* SEOUL BITES PH — Multi-Branch POS, Self Kiosk, Table QR, KDS, Blind Closeout, Owner Command & Signage */
+/* HM Snacks — Multi-Branch POS, Self Kiosk, Table QR, KDS, Blind Closeout, Owner Command & Signage */
 
 (() => {
   const esc = (str) =>
@@ -273,7 +273,7 @@
     const unlockBtn = document.getElementById("btn-kiosk-unlock");
     const lockBtn = document.getElementById("btn-kiosk-lock");
 
-    document.getElementById("header-shop-name").textContent = (state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH";
+    document.getElementById("header-shop-name").textContent = (state.bootstrap && state.bootstrap.shopName) || "HM Snacks";
     const activeBranch = getActiveBranch();
     document.getElementById("header-subline").textContent = `${activeBranch.name} · ${(state.bootstrap && state.bootstrap.businessDate) || ""}`;
 
@@ -380,7 +380,7 @@
           <strong style="font-size:13px;">ORDER SLIP ONLY</strong><br>
           <small>NOT AN OFFICIAL BIR INVOICE</small><br>
           <hr style="border:none;border-top:1px dashed #000;margin:4px 0;">
-          <strong>${esc((state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH")}</strong><br>
+          <strong>${esc((state.bootstrap && state.bootstrap.shopName) || "HM Snacks")}</strong><br>
           <small>${esc((branch && branch.name) || order.branch_id)}</small><br>
           <div style="font-size:20px;font-weight:900;margin:4px 0;">#${order.order_number}</div>
           <small>${esc(order.table_label)} · ${esc(order.source_mode.toUpperCase())}</small>
@@ -479,7 +479,14 @@
               .join("")}
           </div>
 
-          <div class="pos-grid">
+          ${
+            allItems.length === 0
+              ? `<div class="card" style="padding:28px;text-align:center;">
+                   <h3 style="margin:0 0 6px;">📋 아직 등록된 메뉴가 없습니다</h3>
+                   <p style="font-size:13px;color:var(--ink-muted);margin:0 0 14px;">메뉴가 정해지면 <strong>📊 사장님 감시 (PIN 7777) → 🍔 메뉴 등록</strong>에서 바로 추가하실 수 있습니다.</p>
+                   <button type="button" class="btn btn-primary" id="btn-pos-go-menu">➕ 메뉴 등록하러 가기</button>
+                 </div>`
+              : `<div class="pos-grid">
             ${filtered
               .map(
                 (item) => `
@@ -498,8 +505,9 @@
               </button>
             `
               )
-              .join("")}
-          </div>
+              .join("") || `<div style="padding:20px;color:var(--ink-muted);">이 카테고리에 등록된 메뉴가 없습니다.</div>`}
+          </div>`
+          }
 
           <div class="card" style="padding:14px;margin-top:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -636,6 +644,13 @@
         </aside>
       </div>
     `;
+
+    if (document.getElementById("btn-pos-go-menu")) {
+      document.getElementById("btn-pos-go-menu").onclick = () => {
+        state.adminTab = "menu";
+        switchMode("admin");
+      };
+    }
 
     container.querySelectorAll("[data-pos-filter]").forEach((btn) => {
       btn.onclick = () => {
@@ -961,7 +976,7 @@
     container.innerHTML = `
       <div class="pos-banner">
         <div>
-          <h2>${esc((state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH")} ${state.tableLabel ? `<span class="pill-tag tag-gold">📍 ${esc(state.tableLabel)}</span>` : ""}</h2>
+          <h2>${esc((state.bootstrap && state.bootstrap.shopName) || "HM Snacks")} ${state.tableLabel ? `<span class="pill-tag tag-gold">📍 ${esc(state.tableLabel)}</span>` : ""}</h2>
           <p>${esc(branch.name)} · Self-Order Kiosk & Mobile QR</p>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -1040,7 +1055,14 @@
               .join("")}
           </div>
 
-          <div class="kiosk-grid">
+          ${
+            allItems.length === 0
+              ? `<div class="card" style="padding:28px;text-align:center;">
+                   <h3 style="margin:0 0 6px;">📋 아직 등록된 메뉴가 없습니다 (No Menu Yet)</h3>
+                   <p style="font-size:13px;color:var(--ink-muted);margin:0 0 14px;">사장님 관리(PIN 7777)에서 메뉴를 등록하면 바로 표시됩니다.</p>
+                   ${state.kioskLocked ? "" : `<button type="button" class="btn btn-primary" id="btn-kiosk-go-menu">➕ 메뉴 등록하러 가기</button>`}
+                 </div>`
+              : `<div class="kiosk-grid">
             ${filtered
               .map(
                 (item) => `
@@ -1061,8 +1083,9 @@
                 </div>
               </div>`
               )
-              .join("")}
-          </div>
+              .join("") || `<div style="padding:20px;color:var(--ink-muted);">해당 카테고리에 메뉴가 없습니다.</div>`}
+          </div>`
+          }
         </div>
 
         <aside class="card checkout-rail">
@@ -1112,6 +1135,12 @@
       </div>
     `;
 
+    if (document.getElementById("btn-kiosk-go-menu")) {
+      document.getElementById("btn-kiosk-go-menu").onclick = () => {
+        state.adminTab = "menu";
+        switchMode("admin");
+      };
+    }
     container.querySelectorAll("[data-lang]").forEach((b) => {
       b.onclick = () => {
         state.lang = b.dataset.lang;
@@ -1916,10 +1945,15 @@
                         <option value="0" ${!m.is_available ? "selected" : ""}>품절</option>
                       </select>
                     </td>
-                    <td><button type="button" class="btn btn-green btn-sm" data-menu-save="${esc(m.id)}">저장</button></td>
+                    <td>
+                      <div style="display:flex;gap:6px;">
+                        <button type="button" class="btn btn-green btn-sm" data-menu-save="${esc(m.id)}">저장</button>
+                        <button type="button" class="btn btn-danger-outline btn-sm" data-menu-del="${esc(m.id)}">삭제</button>
+                      </div>
+                    </td>
                   </tr>`
                   )
-                  .join("")}
+                  .join("") || `<tr><td colspan="5" style="text-align:center;color:var(--ink-muted);">등록된 메뉴가 없습니다. 위에서 새 메뉴를 추가해 주세요!</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -1976,6 +2010,19 @@
             await loadBootstrap();
             renderMain();
             toast("메뉴 업데이트 완료!", "success");
+          } catch (err) {
+            toast(err.message, "error");
+          }
+        };
+      });
+
+      el.querySelectorAll("[data-menu-del]").forEach((btn) => {
+        btn.onclick = async () => {
+          try {
+            await api(`/api/admin/menu/${encodeURIComponent(btn.dataset.menuDel)}`, { method: "DELETE" });
+            await loadBootstrap();
+            renderMain();
+            toast("메뉴가 삭제되었습니다.", "success");
           } catch (err) {
             toast(err.message, "error");
           }
@@ -2085,10 +2132,10 @@
           </div>
 
           <div style="border-top:1px solid var(--border);padding-top:14px;">
-            <strong style="display:block;margin-bottom:8px;">데이터 관리 (개업 전 초기화 / 데모 복원)</strong>
+            <strong style="display:block;margin-bottom:8px;">데이터 관리 (매일 자정 필리핀 시간 기준 자동 일자 분리 / 수동 초기화)</strong>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button type="button" class="btn btn-danger-outline btn-sm" id="btn-reset-clean">🧹 실제 영업 시작 (모든 테스트 주문/마감 초기화)</button>
-              <button type="button" class="btn btn-ghost btn-sm" id="btn-reset-seed">🎬 다지점 데모 데이터 다시 채우기</button>
+              <button type="button" class="btn btn-danger-outline btn-sm" id="btn-reset-clean">🧹 주문·매출·마감 기록만 초기화</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-reset-all">🗑️ 메뉴까지 모두 비우기</button>
             </div>
           </div>
         </div>
@@ -2126,16 +2173,17 @@
       };
 
       document.getElementById("btn-reset-clean").onclick = async () => {
-        await api("/api/admin/demo-reset", { method: "POST", body: { mode: "clean" } });
+        await api("/api/admin/demo-reset", { method: "POST", body: { wipeMenus: false } });
         await loadAdminDashboard();
         renderMain();
-        toast("오늘 테스트 데이터가 모두 깨끗이 초기화되었습니다!", "success");
+        toast("매출·주문·마감 기록이 초기화되었습니다!", "success");
       };
-      document.getElementById("btn-reset-seed").onclick = async () => {
-        await api("/api/admin/demo-reset", { method: "POST", body: { mode: "seed" } });
+      document.getElementById("btn-reset-all").onclick = async () => {
+        await api("/api/admin/demo-reset", { method: "POST", body: { wipeMenus: true } });
+        await loadBootstrap();
         await loadAdminDashboard();
         renderMain();
-        toast("다지점 데모 데이터가 로드되었습니다!", "success");
+        toast("메뉴와 모든 기록이 초기화되었습니다!", "success");
       };
     }
   }
@@ -2143,7 +2191,7 @@
   // ---------- MODE 6: Printable BSP-Compliant Cash Drop-Box & QR Signage Studio ----------
   function renderSignageMode(container) {
     const branch = getActiveBranch();
-    const shopName = (state.bootstrap && state.bootstrap.shopName) || "SEOUL BITES PH";
+    const shopName = (state.bootstrap && state.bootstrap.shopName) || "HM Snacks";
     const baseOrigin = window.location.origin;
     const lineQrUrl = `${baseOrigin}/?mode=kiosk&branchId=${encodeURIComponent(branch.id)}&table=LINE-QR&lock=1`;
     const table1QrUrl = `${baseOrigin}/?mode=kiosk&branchId=${encodeURIComponent(branch.id)}&table=Table-1&lock=1`;

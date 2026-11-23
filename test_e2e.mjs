@@ -36,12 +36,32 @@ try {
   const svg = KSnackQR.generateQrSvg("https://example.com/?mode=kiosk&branchId=school-a&table=LINE-QR", 180);
   assert.ok(svg.startsWith("<svg") && svg.includes("<rect"), "QR SVG should generate cleanly offline");
 
-  // 2. Bootstrap sanity & privacy check
+  // 2. Bootstrap sanity & privacy check (clean HM Snacks start with 0 menus)
   const boot = await reqJson("/api/bootstrap");
   assert.equal(boot.status, 200);
+  assert.equal(boot.data.shopName, "HM Snacks");
   assert.equal(boot.data.branches.length, 3);
-  assert.equal(boot.data.menuItems.length, 15);
+  assert.equal(boot.data.menuItems.length, 0);
   assert.equal(boot.data.paymongoSecretKey, undefined, "Bootstrap must never leak API secret");
+
+  // 2b. Owner creates and deletes menus via Admin API
+  const testMenus = [
+    { id: "combo_chicken_set", category: "combo", nameKo: "치킨마요 컵밥 + 음료", nameEn: "Chicken Mayo Cupbap + Drink", price: 150, isQuickCombo: true, consumes: [{ inventory_item_id: "bowl_cupbap", qty: 1 }, { inventory_item_id: "can_drink", qty: 1 }] },
+    { id: "cupbap_chicken", category: "cupbap", nameKo: "치킨마요 컵밥", nameEn: "Chicken Mayo Cupbap", price: 120, isQuickCombo: false, options: [{ id: "topping", label_ko: "토핑", label_en: "Topping", choices: [{ id: "base", label_ko: "기본", label_en: "Standard", priceDelta: 0 }, { id: "egg", label_ko: "계란", label_en: "Fried Egg", priceDelta: 20 }] }], consumes: [{ inventory_item_id: "bowl_cupbap", qty: 1 }] },
+    { id: "combo_full_set", category: "combo", nameKo: "풀세트", nameEn: "Full Set", price: 200, isQuickCombo: true, consumes: [{ inventory_item_id: "bowl_cupbap", qty: 1 }, { inventory_item_id: "cup_tteok", qty: 1 }, { inventory_item_id: "can_drink", qty: 1 }] },
+    { id: "combo_spam_cupbap", category: "combo", nameKo: "스팸 컵밥", nameEn: "Spam Cupbap", price: 100, isQuickCombo: true, consumes: [{ inventory_item_id: "bowl_cupbap", qty: 1 }] },
+    { id: "combo_eomuk_tea", category: "combo", nameKo: "오뎅+아이스티", nameEn: "Eomuk + Tea", price: 100, isQuickCombo: true, consumes: [{ inventory_item_id: "skewer_eomuk", qty: 2 }, { inventory_item_id: "can_drink", qty: 1 }] },
+    { id: "drink_iced_tea", category: "drink", nameKo: "아이스티", nameEn: "Iced Tea", price: 50, isQuickCombo: true, consumes: [{ inventory_item_id: "can_drink", qty: 1 }] },
+    { id: "temp_del", category: "drink", nameKo: "임시메뉴", nameEn: "Temp Menu", price: 50, isQuickCombo: false, consumes: [] },
+  ];
+  for (const m of testMenus) {
+    const cr = await reqJson("/api/admin/menu", { method: "POST", headers: { "X-Owner-Pin": "7777" }, body: m });
+    assert.equal(cr.status, 200);
+  }
+  const delRes = await reqJson("/api/admin/menu/temp_del", { method: "DELETE", headers: { "X-Owner-Pin": "7777" } });
+  assert.equal(delRes.status, 200);
+  const bootAfter = await reqJson("/api/bootstrap");
+  assert.equal(bootAfter.data.menuItems.length, 6);
 
   // 3. Server-side price tamper protection & POS 2-Tap checkout with change calculation
   const posOrder = await reqJson("/api/orders", {
